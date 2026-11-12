@@ -1,0 +1,17 @@
+# SISTRA — semua permintaan diteruskan ke sistra-proxy.php
+Options -Indexes
+DirectoryIndex sistra-proxy.php
+RewriteEngine On
+
+# Paksa HTTPS (kecuali validasi sertifikat AutoSSL)
+RewriteCond %{HTTPS} off
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+RewriteRule ^sistra-proxy\.php$ - [L]
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteRule ^ sistra-proxy.php [L,QSA]
+
+<FilesMatch "^(php\.ini|\.htaccess|error_log)$">
+    Require all denied
+</FilesMatch>

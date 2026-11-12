@@ -62,3 +62,22 @@ deploy/build-bundle.sh        # → dist/sistra-bundle.tar.gz
 ### Pembaruan versi
 
 Bangun ulang paket, timpa `app/` dan `web/`, jalankan *Run Pip Install* bila `requirements` berubah, lalu *Restart*. Data di `SISTRA_DATA_DIR` dan basis data tidak tersentuh.
+
+---
+
+## C. Domain di hosting tanpa Python, aplikasi di hosting lain (proxy PHP)
+
+Dipakai untuk `sistra.semestateknologiutama.com`. Paket hosting semesta tidak mendukung Python, dan proxy Apache `[P]` di sana dinonaktifkan. Karena itu:
+
+```
+Pengguna ──HTTPS──▶ sistra.semestateknologiutama.com   (semesta: .htaccess + sistra-proxy.php)
+                         │  X-Forwarded-For = IP pengguna
+                         ▼
+                    sistra.ramasetyamandiri.com          (ramasetyamandiri: Setup Python App)
+                    hanya menerima koneksi dari IP semesta (SISTRA_PROXY_ONLY=1)
+```
+
+- Berkas proxy: [`deploy/proxy-php/`](proxy-php/), salin ke root dokumen domain publik. Ubah `UPSTREAM` bila perlu.
+- Di origin, `sistra.env` mengatur `SISTRA_TRUSTED_PROXIES=<IP keluar server proxy>` dan `SISTRA_PROXY_ONLY=1`.
+- Kunci rahasia (`SISTRA_AUTO_SECRETS=1`) dan kredensial akun (`SISTRA_AUTO_SEED=1`) dibuat otomatis di `SISTRA_DATA_DIR`, berizin 0600, dan tidak pernah dikirim lewat kanal lain.
+- **Jangan** pakai *Directory Privacy* (HTTP Basic) di depan aplikasi: header `Authorization`-nya bertabrakan dengan token login SISTRA.
