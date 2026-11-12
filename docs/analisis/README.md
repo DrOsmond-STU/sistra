@@ -17,4 +17,4 @@ Analisis sistem atas **KAK Pembangunan Sistem Informasi dan Aksi Strategis (SIST
 - **Fase:** 75 fitur dibagi menjadi 40 (F1, 180 hari), 25 (F2), 8 (F3), dan 2 tidak dibangun.
 - **Tidak dibangun:** S46 dan S47, yaitu operasi akun samaran yang dirancang menghindari deteksi platform. Penggantinya adalah komunikasi melalui akun resmi dan kemitraan terbuka.
 - **Risiko terbesar:** ketersediaan akses data media sosial resmi, lingkup terhadap waktu, spesifikasi bermerek, dan kesiapan pusat data.
-- **Langkah berikutnya:** MVP 17 fitur (±4 minggu) untuk memvalidasi alur inti hulu–hilir.
+- **Status MVP:** 17 fitur selesai dan teruji (53 uji otomatis di SQLite dan PostgreSQL, cakupan 90%). Cara menjalankan dan skenario demo ada di [README utama](../../README.md).

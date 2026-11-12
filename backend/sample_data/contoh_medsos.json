@@ -1,0 +1,23 @@
+[
+  {
+    "id": "json-contoh-1",
+    "title": "Warga Bandung keluhkan harga cabai melonjak (contoh)",
+    "body": "Harga cabai rawit di pasar Bandung, Jawa Barat, melonjak dalam sepekan. Pedagang dan pembeli mengeluhkan kondisi yang membebani. Data contoh sintetis.",
+    "url": "https://contoh.invalid/json/1",
+    "author": "Akun contoh"
+  },
+  {
+    "id": "json-contoh-2",
+    "title": "Vaksinasi anak di Denpasar berjalan lancar (contoh)",
+    "body": "Puskesmas di Denpasar, Bali, menggelar vaksinasi anak dan orang tua merasa terbantu. Data contoh sintetis.",
+    "url": "https://contoh.invalid/json/2",
+    "author": "Akun contoh"
+  },
+  {
+    "id": "json-contoh-3",
+    "title": "Video viral di Palembang ternyata disinformasi (contoh)",
+    "body": "Tim cek fakta memastikan video yang diklaim terjadi di Palembang, Sumatera Selatan, adalah rekaman lama dan menyesatkan. Data contoh sintetis.",
+    "url": "https://contoh.invalid/json/3",
+    "author": "Akun contoh"
+  }
+]

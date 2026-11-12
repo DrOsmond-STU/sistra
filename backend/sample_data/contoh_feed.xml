@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- DATA CONTOH SINTETIS untuk uji impor RSS. Bukan berita nyata. -->
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Portal Contoh (sintetis)</title>
+    <link>https://contoh.invalid/</link>
+    <description>Feed contoh SISTRA</description>
+    <item>
+      <title>Antrean warga di operasi pasar beras Kota Malang (contoh)</title>
+      <link>https://contoh.invalid/rss/1</link>
+      <guid>rss-contoh-1</guid>
+      <description><![CDATA[<p>Operasi pasar beras di Kota Malang, Jawa Timur, dipadati warga. Sebagian warga <b>kecewa</b> karena kuota cepat habis dan harga beras di pasar masih mahal.</p>]]></description>
+      <dc:creator>Redaksi Contoh</dc:creator>
+    </item>
+    <item>
+      <title>Klarifikasi resmi: kabar penghentian bantuan sosial di Makassar hoaks (contoh)</title>
+      <link>https://contoh.invalid/rss/2</link>
+      <guid>rss-contoh-2</guid>
+      <description>Pemerintah memastikan kabar penghentian bantuan sosial di Makassar adalah berita bohong. Penyaluran berjalan lancar dan warga diimbau memeriksa kanal resmi.</description>
+    </item>
+    <item>
+      <title>BPBD Kalimantan Timur siaga banjir di Samarinda (contoh)</title>
+      <link>https://contoh.invalid/rss/3</link>
+      <guid>rss-contoh-3</guid>
+      <description>BPBD Kalimantan Timur menetapkan status siaga banjir. Koordinasi lintas instansi disebut berjalan efektif.</description>
+    </item>
+  </channel>
+</rss>
