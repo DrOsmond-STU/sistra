@@ -38,6 +38,7 @@ class Settings:
     token_ttl_minutes: int
     max_upload_mb: int
     cors_origins: list[str]
+    static_dir: Path | None = None
     alerts: AlertThresholds = field(default_factory=AlertThresholds)
 
     @property
@@ -69,4 +70,5 @@ def get_settings() -> Settings:
         token_ttl_minutes=int(os.getenv("SISTRA_TOKEN_TTL_MINUTES", "480")),
         max_upload_mb=int(os.getenv("SISTRA_MAX_UPLOAD_MB", "50")),
         cors_origins=[o.strip() for o in os.getenv("SISTRA_CORS_ORIGINS", "http://localhost:5173").split(",") if o.strip()],
+        static_dir=Path(os.environ["SISTRA_STATIC_DIR"]).resolve() if os.getenv("SISTRA_STATIC_DIR") else None,
     )

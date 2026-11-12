@@ -10,7 +10,9 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import secrets
 from datetime import date, timedelta
+from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -58,7 +60,7 @@ USERS = [
 ]
 
 
-def seed_base(db: Session, password: str) -> dict[str, User]:
+def seed_base(db: Session, password: str, per_user: dict[str, str] | None = None) -> dict[str, User]:
     units: dict[str, Unit] = {}
     for code, name, parent in UNITS:
         u = db.execute(select(Unit).where(Unit.code == code)).scalar_one_or_none()
@@ -72,7 +74,8 @@ def seed_base(db: Session, password: str) -> dict[str, User]:
         u = db.execute(select(User).where(User.username == username)).scalar_one_or_none()
         if u is None:
             u = User(username=username, full_name=full_name, nip=f"19900101202701{i:04d}", unit_id=units[unit].id,
-                     roles=roles, clearance=clearance, password_hash=hash_password(password))
+                     roles=roles, clearance=clearance,
+                     password_hash=hash_password((per_user or {}).get(username, password)))
             db.add(u)
             db.flush()
         users[username] = u
@@ -159,13 +162,25 @@ def seed_demo(db: Session, users: dict[str, User]) -> None:
                              created_by=users["redaktur"].id))
 
 
+def _write_credentials(path: Path, creds: dict[str, str]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as fh:
+        fh.write("# Kredensial akun SISTRA — simpan di tempat aman lalu hapus berkas ini.\n")
+        for username, pw in creds.items():
+            fh.write(f"{username}\t{pw}\n")
+
+
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     parser = argparse.ArgumentParser(description="Seed data SISTRA")
     parser.add_argument("--reset", action="store_true", help="hapus semua data lalu isi ulang")
     parser.add_argument("--no-demo", action="store_true", help="hanya data dasar (unit, pengguna, isu, kanal)")
+    parser.add_argument("--random-passwords", metavar="BERKAS",
+                        help="buat kata sandi acak per akun dan tulis ke BERKAS (izin 0600), bukan kata sandi bersama")
     args = parser.parse_args()
     password = os.getenv("SISTRA_SEED_PASSWORD", "sistra-demo-2027")
+    per_user = ({u[0]: secrets.token_urlsafe(12) for u in USERS} if args.random_passwords else None)
 
     if args.reset:
         reset_db()
@@ -175,11 +190,15 @@ def main() -> None:
         if db.execute(select(User)).first() is not None and not args.reset:
             log.info("Basis data sudah berisi pengguna; seed dilewati (gunakan --reset untuk mengisi ulang).")
             return
-        users = seed_base(db, password)
+        users = seed_base(db, password, per_user)
         if not args.no_demo:
             seed_demo(db, users)
         db.commit()
-    log.warning("Pengguna contoh dibuat dengan kata sandi '%s' — ganti sebelum dipakai selain demo.", password)
+    if per_user:
+        _write_credentials(Path(args.random_passwords), per_user)
+        log.info("Kata sandi acak per akun ditulis ke %s (izin 0600).", args.random_passwords)
+    else:
+        log.warning("Pengguna contoh dibuat dengan kata sandi '%s' — ganti sebelum dipakai selain demo.", password)
 
 
 if __name__ == "__main__":

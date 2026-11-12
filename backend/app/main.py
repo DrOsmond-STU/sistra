@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import get_settings
 from app.core.db import init_db
@@ -54,6 +57,11 @@ def create_app() -> FastAPI:
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "no-referrer")
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; connect-src 'self'; "
+            "frame-ancestors 'none'",
+        )
         return response
 
     for router in (identity_router, dashboard_router, ingest_router, analytics_router, alerts_router,
@@ -64,7 +72,25 @@ def create_app() -> FastAPI:
     def health() -> dict:
         return {"status": "ok", "version": VERSION}
 
+    if settings.static_dir and (settings.static_dir / "index.html").is_file():
+        _mount_frontend(app, settings.static_dir)
+
     return app
+
+
+def _mount_frontend(app: FastAPI, root: Path) -> None:
+    """Mode satu-aplikasi (mis. hosting cPanel): sajikan build frontend dari backend, dengan fallback SPA."""
+    app.mount("/assets", StaticFiles(directory=root / "assets"), name="assets")
+    index = root / "index.html"
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def spa(path: str) -> FileResponse:
+        if path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Tidak ditemukan")
+        candidate = (root / path).resolve()
+        if path and candidate.is_file() and candidate.is_relative_to(root):
+            return FileResponse(candidate)
+        return FileResponse(index, headers={"Cache-Control": "no-cache"})
 
 
 app = create_app()

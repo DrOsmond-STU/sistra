@@ -42,6 +42,8 @@ docker compose up --build
 - Aplikasi: http://localhost:8080
 - Dokumentasi API (OpenAPI): http://localhost:8080/api/docs
 
+Pemasangan di hosting cPanel (satu aplikasi Python, kata sandi acak per akun): lihat [`deploy/README.md`](deploy/README.md).
+
 ### Opsi B — Pengembangan lokal
 
 ```bash
@@ -95,7 +97,7 @@ SISTRA_DATABASE_URL="postgresql+psycopg://user:pass@host/db" pytest   # PostgreS
 pytest --cov=app                          # cakupan
 ```
 
-Hasil saat ini: **53 uji lulus** di SQLite dan PostgreSQL 16, cakupan **90%**. Uji mencakup kriteria penerimaan MVP:
+Hasil saat ini: **55 uji lulus** di SQLite dan PostgreSQL 16, cakupan **90%**. Uji mencakup kriteria penerimaan MVP:
 - akses melebihi clearance ditolak;
 - penulis tidak dapat menyetujui naskahnya sendiri;
 - isi yang diubah setelah disetujui tidak dapat ditayangkan;
