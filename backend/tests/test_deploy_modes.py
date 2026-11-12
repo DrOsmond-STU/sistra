@@ -49,3 +49,56 @@ def test_random_passwords_written_with_private_permissions(tmp_path, monkeypatch
     with TestClient(__import__("app.main", fromlist=["app"]).app) as c:
         assert c.post("/api/auth/login", json={"username": "admin", "password": "sistra-demo-2027"}).status_code == 401
         assert c.post("/api/auth/login", json={"username": "admin", "password": creds["admin"]}).status_code == 200
+
+
+def test_auto_seed_writes_credentials_once(tmp_path, monkeypatch):
+    from app.core.db import reset_db
+    from app.seed import auto_seed
+
+    reset_db()
+    get_settings.cache_clear()
+    monkeypatch.setenv("SISTRA_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("SISTRA_SEED_DEMO", "0")
+    try:
+        auto_seed()
+        cred = tmp_path / "kredensial.txt"
+        first = cred.read_text()
+        assert stat.S_IMODE(os.stat(cred).st_mode) == 0o600
+        auto_seed()  # kedua kali: tidak menimpa
+        assert cred.read_text() == first
+    finally:
+        get_settings.cache_clear()
+
+
+def test_trusted_proxy_and_proxy_only(monkeypatch, db_base):
+    monkeypatch.setenv("SISTRA_TRUSTED_PROXIES", "testclient")
+    get_settings.cache_clear()
+    try:
+        from app.main import create_app
+
+        with TestClient(create_app()) as c:
+            r = c.post("/api/auth/login", json={"username": "analis", "password": "uji-sandi-123"},
+                       headers={"X-Forwarded-For": "203.0.113.7, 10.0.0.1"})
+            assert r.status_code == 200
+            tok = {"Authorization": f"Bearer {c.post('/api/auth/login', json={'username': 'auditor', 'password': 'uji-sandi-123'}).json()['access_token']}"}
+            ev = c.get("/api/audit?action=auth.login", headers=tok).json()
+            assert any(e["ip"] == "203.0.113.7" and e["actor_username"] == "analis" for e in ev)
+        monkeypatch.setenv("SISTRA_TRUSTED_PROXIES", "198.51.100.1")
+        monkeypatch.setenv("SISTRA_PROXY_ONLY", "1")
+        get_settings.cache_clear()
+        with TestClient(create_app()) as c:
+            r = c.get("/api/health", headers={"X-Forwarded-For": "198.51.100.1"})
+            assert r.status_code == 403  # peer langsung bukan proxy; XFF palsu tidak dipercaya
+    finally:
+        monkeypatch.delenv("SISTRA_PROXY_ONLY", raising=False)
+        monkeypatch.delenv("SISTRA_TRUSTED_PROXIES", raising=False)
+        get_settings.cache_clear()
+
+
+def test_auto_secrets_persist(tmp_path, monkeypatch):
+    from app.core.config import _auto_secrets
+
+    a = _auto_secrets(tmp_path)
+    b = _auto_secrets(tmp_path)
+    assert a == b and len(a["secret_key"]) > 40
+    assert stat.S_IMODE(os.stat(tmp_path / "secrets.json").st_mode) == 0o600

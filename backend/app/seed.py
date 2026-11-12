@@ -201,5 +201,31 @@ def main() -> None:
         log.warning("Pengguna contoh dibuat dengan kata sandi '%s' — ganti sebelum dipakai selain demo.", password)
 
 
+def auto_seed() -> None:
+    """Isi data awal saat aplikasi pertama kali menyala (SISTRA_AUTO_SEED=1), aman untuk banyak proses.
+
+    Untuk hosting tanpa terminal: kredensial acak per akun ditulis ke SISTRA_DATA_DIR/kredensial.txt (0600).
+    """
+    import fcntl
+
+    from app.core.config import get_settings
+
+    settings = get_settings()
+    settings.data_dir.mkdir(parents=True, exist_ok=True)
+    with open(settings.data_dir / ".seed.lock", "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        init_db()
+        with SessionLocal() as db:
+            if db.execute(select(User)).first() is not None:
+                return
+            per_user = {u[0]: secrets.token_urlsafe(12) for u in USERS}
+            users = seed_base(db, "", per_user)
+            if os.getenv("SISTRA_SEED_DEMO", "1") == "1":
+                seed_demo(db, users)
+            db.commit()
+        _write_credentials(settings.data_dir / "kredensial.txt", per_user)
+        log.warning("Data awal dibuat; kredensial di %s", settings.data_dir / "kredensial.txt")
+
+
 if __name__ == "__main__":
     main()

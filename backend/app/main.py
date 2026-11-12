@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import get_settings
 from app.core.db import init_db
+from app.core.proxy import TrustedProxyMiddleware
 from app.modules.alerts.routes import router as alerts_router
 from app.modules.analytics.routes import router as analytics_router
 from app.modules.dashboard.routes import router as dashboard_router
@@ -28,7 +30,12 @@ VERSION = "0.1.0-mvp"
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    init_db()
+    if os.getenv("SISTRA_AUTO_SEED") == "1":
+        from app.seed import auto_seed
+
+        auto_seed()
+    else:
+        init_db()
     yield
 
 
@@ -63,6 +70,9 @@ def create_app() -> FastAPI:
             "frame-ancestors 'none'",
         )
         return response
+
+    if settings.trusted_proxies or settings.proxy_only:
+        app.add_middleware(TrustedProxyMiddleware, trusted=settings.trusted_proxies, proxy_only=settings.proxy_only)
 
     for router in (identity_router, dashboard_router, ingest_router, analytics_router, alerts_router,
                    workflow_router, repository_router):

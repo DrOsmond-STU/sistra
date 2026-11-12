@@ -39,6 +39,8 @@ class Settings:
     max_upload_mb: int
     cors_origins: list[str]
     static_dir: Path | None = None
+    trusted_proxies: frozenset[str] = frozenset()
+    proxy_only: bool = False
     alerts: AlertThresholds = field(default_factory=AlertThresholds)
 
     @property
@@ -50,9 +52,36 @@ class Settings:
         return self.database_url.startswith("sqlite")
 
 
+def _auto_secrets(data_dir: Path) -> dict[str, str]:
+    """Buat/baca kunci rahasia di DATA_DIR/secrets.json (izin 0600) — untuk hosting tanpa terminal.
+
+    Kunci tidak pernah perlu diketik atau dikirim lewat kanal lain; aman untuk banyak proses (flock).
+    """
+    import fcntl
+    import json
+    import secrets as _secrets
+
+    data_dir.mkdir(parents=True, exist_ok=True)
+    path = data_dir / "secrets.json"
+    with open(data_dir / ".secrets.lock", "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if path.exists():
+            return json.loads(path.read_text())
+        values = {"secret_key": _secrets.token_urlsafe(48), "signing_key": _secrets.token_urlsafe(48)}
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, "w") as fh:
+            json.dump(values, fh)
+        return values
+
+
 @lru_cache
 def get_settings() -> Settings:
     env = os.getenv("SISTRA_ENV", "development")
+    data_dir = Path(os.getenv("SISTRA_DATA_DIR", "./data")).resolve()
+    if os.getenv("SISTRA_AUTO_SECRETS") == "1" and not os.getenv("SISTRA_SECRET_KEY"):
+        generated = _auto_secrets(data_dir)
+        os.environ.setdefault("SISTRA_SECRET_KEY", generated["secret_key"])
+        os.environ.setdefault("SISTRA_SIGNING_KEY", generated["signing_key"])
     secret = os.getenv("SISTRA_SECRET_KEY", _DEV_SECRET)
     signing = os.getenv("SISTRA_SIGNING_KEY", secret + "-signing")
     if secret == _DEV_SECRET:
@@ -60,7 +89,6 @@ def get_settings() -> Settings:
             raise RuntimeError("SISTRA_SECRET_KEY wajib diisi pada lingkungan production")
         log.warning("Menggunakan SISTRA_SECRET_KEY bawaan pengembangan — JANGAN dipakai di produksi")
 
-    data_dir = Path(os.getenv("SISTRA_DATA_DIR", "./data")).resolve()
     return Settings(
         env=env,
         database_url=os.getenv("SISTRA_DATABASE_URL", f"sqlite:///{data_dir / 'sistra.db'}"),
@@ -71,4 +99,6 @@ def get_settings() -> Settings:
         max_upload_mb=int(os.getenv("SISTRA_MAX_UPLOAD_MB", "50")),
         cors_origins=[o.strip() for o in os.getenv("SISTRA_CORS_ORIGINS", "http://localhost:5173").split(",") if o.strip()],
         static_dir=Path(os.environ["SISTRA_STATIC_DIR"]).resolve() if os.getenv("SISTRA_STATIC_DIR") else None,
+        trusted_proxies=frozenset(ip.strip() for ip in os.getenv("SISTRA_TRUSTED_PROXIES", "").split(",") if ip.strip()),
+        proxy_only=os.getenv("SISTRA_PROXY_ONLY") == "1",
     )
