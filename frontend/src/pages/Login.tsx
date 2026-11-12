@@ -42,7 +42,7 @@ export default function LoginPage() {
         </label>
         <Msg kind="error">{error}</Msg>
         <button className="primary" disabled={busy} type="submit">{busy ? "Memeriksa…" : "Masuk"}</button>
-        <div className="demo-users">
+        {import.meta.env.DEV && <div className="demo-users">
           Akun demo (kata sandi dari <span className="mono">SISTRA_SEED_PASSWORD</span>, bawaan <span className="mono">sistra-demo-2027</span>):{" "}
           {DEMO.map((u, i) => (
             <span key={u}>
@@ -50,7 +50,7 @@ export default function LoginPage() {
               {i < DEMO.length - 1 ? ", " : ""}
             </span>
           ))}
-        </div>
+        </div>}
       </form>
     </div>
   );
