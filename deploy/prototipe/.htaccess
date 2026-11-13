@@ -1,0 +1,8 @@
+# Purwarupa UI/UX SISTRA — hanya index.php (gerbang login) yang dilayani
+DirectoryIndex index.php
+Options -Indexes
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+RewriteRule !^(index\.php)?$ index.php [L]

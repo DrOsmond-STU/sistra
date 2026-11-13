@@ -80,4 +80,7 @@ Pengguna ──HTTPS──▶ sistra.semestateknologiutama.com   (semesta: .htac
 - Berkas proxy: [`deploy/proxy-php/`](proxy-php/), salin ke root dokumen domain publik. Ubah `UPSTREAM` bila perlu.
 - Di origin, `sistra.env` mengatur `SISTRA_TRUSTED_PROXIES=<IP keluar server proxy>` dan `SISTRA_PROXY_ONLY=1`.
 - Kunci rahasia (`SISTRA_AUTO_SECRETS=1`) dan kredensial akun (`SISTRA_AUTO_SEED=1`) dibuat otomatis di `SISTRA_DATA_DIR`, berizin 0600, dan tidak pernah dikirim lewat kanal lain.
+- Tampilan (HTML/CSS/JS hasil `frontend/dist`) dilayani **langsung dari disk server domain publik**; hanya `/api/` yang diteruskan proxy. Ini juga menghindari cache statis CDN hosting yang sempat menyimpan aset kosong. Nama aset diberi akhiran versi (`.r2`) di `vite.config.ts`; naikkan bila cache CDN perlu dilewati lagi.
+- Proxy dan gerbang mengirim `X-Accel-Expires: 0` agar respons dinamis tidak disimpan cache tepi (terverifikasi `x-cache-status: BYPASS`).
+- Purwarupa UI/UX: `/prototipe/` (lihat [`prototype/README.md`](../prototype/README.md)); berkasnya di luar root dokumen, dikirim oleh gerbang login PHP.
 - **Jangan** pakai *Directory Privacy* (HTTP Basic) di depan aplikasi: header `Authorization`-nya bertabrakan dengan token login SISTRA.

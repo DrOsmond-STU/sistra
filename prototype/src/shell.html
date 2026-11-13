@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>SISTRA — Purwarupa UI/UX</title>
+<style>/*CSS*/</style>
+</head>
+<body>
+<div class="banner">PURWARUPA UI/UX · seluruh data sintetis · bukan sistem produksi</div>
+<div class="shell">
+  <nav class="nav" id="nav" aria-label="Navigasi utama">
+    <div class="brand"><div class="logo">S</div><div><b>SISTRA</b><span>Sistem Informasi &amp; Aksi Strategis</span></div></div>
+    <div id="nav-items"></div>
+    <div class="foot">Purwarupa v0.1 · 13 layar<br><a href="/" style="color:var(--nav-ink)">Buka aplikasi MVP →</a><br><a href="?logout=1" style="color:var(--nav-dim)">Keluar</a></div>
+  </nav>
+  <div class="main">
+    <header class="top">
+      <button class="iconbtn menu-btn" data-act="menu" aria-label="Menu">☰</button>
+      <div class="search" data-act="palette" role="button" tabindex="0">⌕ <span>Cari layar, isu, dokumen…</span><kbd>Ctrl K</kbd></div>
+      <div class="sp"></div>
+      <div class="seg" data-roles aria-label="Peran">
+        <button data-act="role" data-v="pimpinan" class="on">Pimpinan</button><button data-act="role" data-v="analis">Analis</button><button data-act="role" data-v="redaktur">Redaktur</button><button data-act="role" data-v="operator">Operator</button>
+      </div>
+      <div class="seg"><button id="annot-btn" data-act="annot" title="Tandai komponen dengan kode fitur KAK">S01–S75</button></div>
+      <button class="iconbtn" data-act="theme" aria-label="Ganti tema" title="Tema terang/gelap">☾</button>
+      <button class="iconbtn" data-act="bell" aria-label="Peringatan aktif">🔔<span class="dot"></span></button>
+      <div class="who"><div class="avatar" id="avatar">PI</div><div class="nm"><div style="font-weight:600;font-size:13px;line-height:1.2">Pengguna Demo</div><div class="small muted" id="who-role">Pimpinan</div></div></div>
+    </header>
+    <main class="content" id="content"></main>
+  </div>
+</div>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Peringatan"></aside>
+<div class="palette" id="palette" role="dialog" aria-label="Pencarian cepat"><input placeholder="Ketik nama layar, isu, atau dokumen…"><div class="res"></div></div>
+<div class="toast" id="toast" role="status"></div>
+<script>/*JS*/</script>
+</body>
+</html>

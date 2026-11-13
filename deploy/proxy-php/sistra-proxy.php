@@ -83,6 +83,7 @@ $last = end($blocks);
 
 http_response_code($status);
 header_remove('X-Powered-By');
+header('X-Accel-Expires: 0'); // respons API tidak boleh disimpan cache tepi
 $skip = ['transfer-encoding', 'connection', 'keep-alive', 'content-length', 'content-encoding', 'server'];
 foreach (explode("\r\n", $last) as $i => $line) {
     if ($i === 0 || strpos($line, ':') === false) continue;
