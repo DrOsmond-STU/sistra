@@ -1,0 +1,19 @@
+Options -Indexes
+DirectoryIndex index.html
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+# Teruskan header Authorization ke PHP (token login SISTRA)
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+RewriteRule ^prototipe$ /prototipe/ [R=301,L]
+RewriteRule ^prototipe/ - [L]
+RewriteRule ^api\.php$ - [L]
+RewriteRule ^api/ api.php [L,QSA]
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteRule ^ index.html [L]
+<FilesMatch "^(php\.ini|\.htaccess|\.user\.ini|error_log)$">
+    Require all denied
+</FilesMatch>

@@ -65,22 +65,35 @@ Bangun ulang paket, timpa `app/` dan `web/`, jalankan *Run Pip Install* bila `re
 
 ---
 
-## C. Domain di hosting tanpa Python, aplikasi di hosting lain (proxy PHP)
+## C. Hosting cPanel tanpa Python — backend PHP (dipakai untuk sistra.semestateknologiutama.com)
 
-Dipakai untuk `sistra.semestateknologiutama.com`. Paket hosting semesta tidak mendukung Python, dan proxy Apache `[P]` di sana dinonaktifkan. Karena itu:
+Paket hosting semesta hanya menyediakan PHP. Karena itu backend ditulis ulang ke **PHP 8.3 + SQLite** di [`backend-php/`](../backend-php/). Kontraknya identik dengan backend FastAPI, jadi frontend tidak berubah. Seluruh aplikasi berjalan di satu akun hosting tanpa layanan pihak lain.
 
 ```
-Pengguna ──HTTPS──▶ sistra.semestateknologiutama.com   (semesta: .htaccess + sistra-proxy.php)
-                         │  X-Forwarded-For = IP pengguna
-                         ▼
-                    sistra.ramasetyamandiri.com          (ramasetyamandiri: Setup Python App)
-                    hanya menerima koneksi dari IP semesta (SISTRA_PROXY_ONLY=1)
+/home/<user>/
+├── sistra-api/src/            kode aplikasi (di luar root dokumen)
+├── sistra-data/  (0700)       sistra.db, blobs/, secrets.json, kredensial.txt (0600) — dibuat otomatis
+├── sistra-prototipe/          prototipe.html (dikirim oleh gerbang login)
+└── sistra.<domain>/           root dokumen
+    ├── index.html, assets/    hasil `frontend/dist`
+    ├── api.php                front controller  ← deploy/php/api.php
+    ├── .htaccess              /api/* → api.php, selain itu SPA  ← deploy/php/.htaccess
+    ├── .user.ini              batas unggah 55 MB  ← deploy/php/.user.ini
+    └── prototipe/index.php    gerbang login purwarupa  ← deploy/prototipe/
 ```
 
-- Berkas proxy: [`deploy/proxy-php/`](proxy-php/), salin ke root dokumen domain publik. Ubah `UPSTREAM` bila perlu.
-- Di origin, `sistra.env` mengatur `SISTRA_TRUSTED_PROXIES=<IP keluar server proxy>` dan `SISTRA_PROXY_ONLY=1`.
-- Kunci rahasia (`SISTRA_AUTO_SECRETS=1`) dan kredensial akun (`SISTRA_AUTO_SEED=1`) dibuat otomatis di `SISTRA_DATA_DIR`, berizin 0600, dan tidak pernah dikirim lewat kanal lain.
-- Tampilan (HTML/CSS/JS hasil `frontend/dist`) dilayani **langsung dari disk server domain publik**; hanya `/api/` yang diteruskan proxy. Ini juga menghindari cache statis CDN hosting yang sempat menyimpan aset kosong. Nama aset diberi akhiran versi (`.r2`) di `vite.config.ts`; naikkan bila cache CDN perlu dilewati lagi.
-- Proxy dan gerbang mengirim `X-Accel-Expires: 0` agar respons dinamis tidak disimpan cache tepi (terverifikasi `x-cache-status: BYPASS`).
-- Purwarupa UI/UX: `/prototipe/` (lihat [`prototype/README.md`](../prototype/README.md)); berkasnya di luar root dokumen, dikirim oleh gerbang login PHP.
+Langkah:
+
+1. Unggah `backend-php/src/` ke `~/sistra-api/src/`.
+2. Salin isi `deploy/php/` dan hasil `frontend/dist` ke root dokumen subdomain.
+3. Buka `https://sistra.<domain>/api/health`. Permintaan pertama membuat skema, kunci rahasia, data demo sintetis, dan kata sandi acak per akun di `~/sistra-data/kredensial.txt` (izin 0600).
+4. Ambil `kredensial.txt` lewat File Manager cPanel, simpan di pengelola kata sandi, lalu **hapus dari server**.
+5. Aktifkan AutoSSL untuk subdomain.
+
+Catatan:
+
+- Set `SISTRA_SEED_DEMO=0` (variabel lingkungan) bila tidak ingin data demo.
+- Respons API mengirim `Cache-Control: no-store` dan `X-Accel-Expires: 0` agar tidak disimpan cache tepi hosting (terverifikasi `x-cache-status: BYPASS`). Nama aset frontend diberi akhiran versi (`.r2`) di `vite.config.ts`.
+- Watermark unduhan: berkas teks diberi header/footer; PDF diberi anotasi di setiap halaman dan metadata `/SISTRA-Watermark` (pembaruan inkremental). Format lain dicatat di log unduhan.
 - **Jangan** pakai *Directory Privacy* (HTTP Basic) di depan aplikasi: header `Authorization`-nya bertabrakan dengan token login SISTRA.
+- Uji kontrak: suite uji backend Python dijalankan terhadap server PHP (`php -S`), lihat [`backend-php/README.md`](../backend-php/README.md).

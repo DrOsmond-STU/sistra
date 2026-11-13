@@ -1,0 +1,26 @@
+<?php
+// Alat baris perintah (pengembangan/uji): php bin/sistra-cli.php reset [--demo] [--password=SANDI]
+// Menghapus basis data & blob di SISTRA_DATA_DIR lalu mengisi ulang. JANGAN dipakai di produksi.
+declare(strict_types=1);
+if (PHP_SAPI !== 'cli') exit(1);
+require __DIR__ . '/../src/app.php';
+$cmd = $argv[1] ?? '';
+$opts = [];
+foreach (array_slice($argv, 2) as $a) {
+    if ($a === '--demo') $opts['demo'] = true;
+    elseif (str_starts_with($a, '--password=')) $opts['password'] = substr($a, 11);
+}
+if ($cmd === 'verify') { echo json_encode(audit_verify()), "\n"; exit(0); }
+if ($cmd !== 'reset') { fwrite(STDERR, "Penggunaan: sistra-cli.php reset [--demo] [--password=SANDI]\n"); exit(2); }
+$dir = data_dir();
+foreach (['sistra.db', 'sistra.db-wal', 'sistra.db-shm', '.seeded', 'kredensial.txt'] as $f) @unlink("$dir/$f");
+if (is_dir("$dir/blobs")) exec('rm -rf ' . escapeshellarg("$dir/blobs"));
+$pw = $opts['password'] ?? null;
+if ($pw === null) { fwrite(STDERR, "--password wajib untuk reset uji\n"); exit(2); }
+init_schema();
+tx(function () use ($pw, $opts) {
+    $users = seed_base(array_fill_keys(array_column(SEED_USERS, 0), $pw));
+    if (isset($opts['demo'])) seed_demo($users);
+});
+touch("$dir/.seeded");
+echo "ok\n";

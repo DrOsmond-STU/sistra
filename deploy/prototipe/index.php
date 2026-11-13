@@ -2,9 +2,10 @@
 /**
  * Gerbang login purwarupa UI/UX SISTRA.
  * - Berkas purwarupa disimpan DI LUAR root dokumen; hanya dikirim setelah login berhasil.
- * - Kredensial diverifikasi ke API SISTRA (akun yang sama dengan aplikasi), sehingga tercatat di jejak audit.
+ * - Kredensial diverifikasi langsung ke basis data SISTRA (akun yang sama dengan aplikasi) dan tercatat di jejak audit.
  */
-const UPSTREAM = 'https://sistra.ramasetyamandiri.com';
+const SISTRA_APP = __DIR__ . '/../../sistra-api/src/app.php';
+define('SISTRA_DATA_DIR', __DIR__ . '/../../sistra-data');
 const PROTOTYPE_FILE = __DIR__ . '/../../sistra-prototipe/prototipe.html';
 const SESSION_TTL = 8 * 3600;
 
@@ -32,23 +33,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $username = substr(trim((string)($_POST['username'] ?? '')), 0, 64);
         $password = (string)($_POST['password'] ?? '');
-        $ch = curl_init(UPSTREAM . '/api/auth/login');
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode(['username' => $username, 'password' => $password]),
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'X-Forwarded-For: ' . ($_SERVER['REMOTE_ADDR'] ?? ''), 'X-Forwarded-Proto: https'],
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CONNECTTIMEOUT => 10,
-            CURLOPT_TIMEOUT => 20,
-        ]);
-        $body = curl_exec($ch);
-        $code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-        curl_close($ch);
+        require SISTRA_APP;
+        try {
+            $user = one('SELECT * FROM users WHERE username = ?', [$username]);
+            $ok = $user !== null && $user['active'] && password_verify($password, $user['password_hash']);
+            tx(function () use ($ok, $user, $username) {
+                if ($ok) audit_record($user, 'auth.login', 'user', $user['id'], ['via' => 'prototipe']);
+                else audit_record(null, 'auth.login_gagal', 'user', $username, ['via' => 'prototipe'], $username);
+            });
+            $code = $ok ? 200 : 401;
+        } catch (Throwable $e) {
+            error_log('SISTRA prototipe: ' . $e->getMessage());
+            $code = 503;
+        }
         if ($code === 200) {
-            $data = json_decode($body, true);
             session_regenerate_id(true);
             $_SESSION['ok'] = time();
-            $_SESSION['name'] = $data['user']['full_name'] ?? $username;
+            $_SESSION['name'] = $user['full_name'];
             header('Location: ./');
             exit;
         }
