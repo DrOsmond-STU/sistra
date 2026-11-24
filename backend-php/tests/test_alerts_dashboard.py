@@ -91,7 +91,7 @@ def test_dashboard_summary(db_demo, client, login):
     assert len(s["provinces"]) == 38
     assert s["issues"][0]["level"] == "merah"
     assert s["alerts"]["merah"] == 1
-    assert s["drafts"]["disetujui"] == 1
+    assert s["drafts"]["disetujui"] >= 1  # data demo M4–M7 menambah naskah disetujui
     # pimpinan (SANGAT_RAHASIA, DEP7): 3 dokumen terbuka/terbatas + nota dinas miliknya; dokumen RAHASIA
     # milik DIT-ANL tidak terlihat karena beda unit dan tanpa izin. Redaktur hanya TERBUKA/TERBATAS (3).
     assert s["documents_accessible"] == 4

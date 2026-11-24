@@ -97,3 +97,12 @@ Catatan:
 - Watermark unduhan: berkas teks diberi header/footer; PDF diberi anotasi di setiap halaman dan metadata `/SISTRA-Watermark` (pembaruan inkremental). Format lain dicatat di log unduhan.
 - **Jangan** pakai *Directory Privacy* (HTTP Basic) di depan aplikasi: header `Authorization`-nya bertabrakan dengan token login SISTRA.
 - Uji kontrak: suite uji backend Python dijalankan terhadap server PHP (`php -S`), lihat [`backend-php/README.md`](../backend-php/README.md).
+
+### C.1 Pembaruan M4–M7 + AI (tanpa shell)
+
+1. Klon branch rilis ke folder **di luar** root dokumen (cPanel *Git Version Control*, misalnya `~/sistra-src`).
+2. Salin `backend-php/src/*` → `~/sistra-api/src/` dan `backend-php/vendor-meta/` → `~/sistra-api/vendor-meta/`.
+3. Ekstrak `deploy/release/sistra-web.tar.bz2` (cek `SHA256SUMS`) ke root dokumen subdomain.
+4. Permintaan pertama menjalankan migrasi M4–M7 dan data demo sintetis secara otomatis (penanda `~/sistra-data/.m47-v1`).
+5. Masuk sebagai admin → **Pengaturan AI** → *Pasang pustaka Claude* (server mengunduh Anthropic PHP SDK pada commit yang dikunci), lalu isi kunci API. Kunci disimpan di `~/sistra-data/ai.json` (0600) dan tidak pernah dikirim balik ke peramban. Tanpa kunci, AI berjalan dalam mode simulasi.
+6. Hapus klon sementara bila tidak dipakai lagi.

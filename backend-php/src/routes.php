@@ -102,8 +102,13 @@ function draft_out(array $d, array $u, bool $detail = false): array
         'ai_generated' => (bool)$d['ai_generated'], 'ai_label' => $d['ai_generated'] ? AI_LABEL : null, 'status' => $d['status'], 'version' => (int)$d['version'],
         'content_hash' => $d['content_hash'], 'created_by' => (int)$d['created_by'], 'author_name' => $names[(int)$d['created_by']] ?? '-',
         'created_at' => $d['created_at'], 'updated_at' => $d['updated_at'], 'approved_by' => $d['approved_by'] === null ? null : (int)$d['approved_by'],
-        'approved_at' => $d['approved_at'], 'allowed_actions' => allowed_actions($d, $u)];
+        'approved_at' => $d['approved_at'], 'allowed_actions' => allowed_actions($d, $u),
+        'format' => ($d['format'] ?? null) ?: $d['kind'], 'brief_id' => isset($d['brief_id']) && $d['brief_id'] ? (int)$d['brief_id'] : null,
+        'assignee_id' => !empty($d['assignee_id']) ? (int)$d['assignee_id'] : null, 'assignee_name' => !empty($d['assignee_id']) ? val('SELECT full_name FROM users WHERE id = ?', [$d['assignee_id']]) : null,
+        'due_at' => $d['due_at'] ?? null, 'priority' => ($d['priority'] ?? null) ?: 'normal', 'editorial_score' => isset($d['editorial_score']) ? (int)$d['editorial_score'] : null,
+        'hashtags' => jdec($d['hashtags'] ?? '[]'), 'published_at' => $d['published_at'] ?? null];
     if (!$detail) return $o;
+    $o['editorial'] = !empty($d['editorial_json']) ? jdec($d['editorial_json'], null) : null;
     $o['steps'] = array_map(fn($s) => ['from_status' => $s['from_status'], 'to_status' => $s['to_status'], 'actor_id' => (int)$s['actor_id'],
         'actor_name' => $names[(int)$s['actor_id']] ?? '-', 'actor_role' => $s['actor_role'], 'comment' => $s['comment'], 'version' => (int)$s['version'],
         'signature' => $s['signature'], 'at' => $s['at']], $steps);
@@ -503,14 +508,14 @@ function register_routes(Router $r): void
         $u = require_roles(...AUTHOR_ROLES);
         $b = json_body();
         $kind = str_field($b, 'kind');
-        if (!in_array($kind, ['rilis', 'opini', 'editorial', 'briefing', 'infografis', 'video', 'audio'], true)) fail(422, 'Jenis naskah tidak dikenal');
+        if (!in_array($kind, ['rilis', 'opini', 'editorial', 'briefing', 'infografis', 'video', 'audio', 'artikel', 'caption', 'thread', 'carousel', 'podcast', 'faq'], true)) fail(422, 'Jenis naskah tidak dikenal');
         $title = trim(str_field($b, 'title', 5, 300)); $body = trim(str_field($b, 'body', 20));
         $prov = ($b['province_code'] ?? null) ?: null;
         if ($prov !== null && !isset(PROVINCES[$prov])) fail(422, 'Kode provinsi tidak dikenal');
         $issueId = null;
         if ($ic = ($b['issue_code'] ?? null)) { $issueId = val('SELECT id FROM issues WHERE code = ?', [$ic]); if (!$issueId) fail(422, 'Kode isu tidak dikenal'); }
         $now = now_iso(); $ai = !empty($b['ai_generated']); $h = draft_hash($title, $body);
-        $id = insert('drafts', ['kind' => $kind, 'title' => $title, 'body' => $body, 'province_code' => $prov, 'issue_id' => $issueId, 'ai_generated' => (int)$ai,
+        $id = insert('drafts', ['kind' => $kind, 'format' => $kind, 'title' => $title, 'body' => $body, 'province_code' => $prov, 'issue_id' => $issueId, 'ai_generated' => (int)$ai,
             'status' => 'draf', 'version' => 1, 'content_hash' => $h, 'created_by' => $u['id'], 'created_at' => $now, 'updated_at' => $now]);
         insert('draft_revisions', ['draft_id' => $id, 'version' => 1, 'title' => $title, 'body' => $body, 'edited_by' => $u['id'], 'at' => $now]);
         audit_record($u, 'naskah.buat', 'draft', $id, ['kind' => $kind, 'ai_generated' => $ai, 'hash' => $h]);

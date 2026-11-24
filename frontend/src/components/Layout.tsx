@@ -1,20 +1,24 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { api } from "../api";
 import { useAuth } from "../auth";
 import { ROLE_LABEL } from "../format";
+import AiAssistant from "./AiAssistant";
 import { ClassChip } from "./ui";
 
-interface NavItem { to: string; label: string; roles?: string[] }
+interface NavItem { to: string; label: string; code?: string; roles?: string[]; group?: string }
 
+// Modul lain (Dashboard Situasi, Peringatan Dini, Konten & Isu, Sumber, Repositori) disembunyikan:
+// sudah dikelola aplikasi lain. Fokus SISTRA: M4–M7 + dashboard + asisten AI.
 const NAV: NavItem[] = [
-  { to: "/", label: "Dashboard Situasi" },
-  { to: "/peringatan", label: "Peringatan Dini" },
-  { to: "/konten", label: "Konten & Isu" },
-  { to: "/sumber", label: "Sumber & Impor", roles: ["analis", "admin"] },
-  { to: "/naskah", label: "Naskah & Persetujuan" },
-  { to: "/kalender", label: "Kalender Distribusi" },
-  { to: "/repositori", label: "Repositori Dokumen" },
+  { to: "/", label: "Dashboard Eksekutif", group: "Ringkasan" },
+  { to: "/analitik", label: "Dashboard Analitik" },
+  { to: "/produksi", label: "Produksi Narasi", code: "M4", group: "Alur kerja" },
+  { to: "/editorial", label: "Editorial & Persetujuan", code: "M5" },
+  { to: "/kalender", label: "Kalender Tayang", code: "M5" },
+  { to: "/kanal-resmi", label: "Kanal Medsos Resmi", code: "M6" },
+  { to: "/distribusi", label: "Distribusi 39 Wilayah", code: "M7" },
+  { to: "/naskah", label: "Daftar Naskah", group: "Lainnya" },
+  { to: "/pengaturan-ai", label: "Pengaturan AI", roles: ["admin"] },
   { to: "/audit", label: "Jejak Audit", roles: ["auditor"] },
   { to: "/pengguna", label: "Pengguna", roles: ["admin"] },
 ];
@@ -46,32 +50,24 @@ function useTheme(): [string, () => void] {
 export default function Layout() {
   const { user, logout, hasRole } = useAuth();
   const [open, setOpen] = useState(false);
-  const [redAlerts, setRedAlerts] = useState(0);
   const [, toggleTheme] = useTheme();
   const loc = useLocation();
 
   useEffect(() => setOpen(false), [loc.pathname]);
-  useEffect(() => {
-    const load = () =>
-      api<{ level: string }[]>("/alerts")
-        .then((a) => setRedAlerts(a.filter((x) => x.level === "merah" || x.level === "oranye").length))
-        .catch(() => undefined);
-    load();
-    const t = setInterval(load, 60_000);
-    return () => clearInterval(t);
-  }, [loc.pathname]);
 
   if (!user) return null;
   return (
     <div className="shell">
       <nav className={`nav${open ? " open" : ""}`} aria-label="Navigasi utama">
         <div className="brand">SISTRA</div>
-        <div className="brand-sub">Sistem Informasi dan Aksi Strategis · MVP</div>
+        <div className="brand-sub">Produksi · Persetujuan · Kanal · Distribusi</div>
         {NAV.filter((n) => !n.roles || hasRole(...n.roles)).map((n) => (
-          <NavLink key={n.to} to={n.to} end={n.to === "/"}>
-            {n.label}
-            {n.to === "/peringatan" && redAlerts > 0 && <span className="badge" aria-label={`${redAlerts} peringatan tinggi`}>{redAlerts}</span>}
-          </NavLink>
+          <Fragment key={n.to}>
+            {n.group && <div className="nav-group">{n.group}</div>}
+            <NavLink to={n.to} end={n.to === "/"}>
+              <span>{n.code && <span className="mcode">{n.code}</span>}{n.label}</span>
+            </NavLink>
+          </Fragment>
         ))}
         <div className="spacer" />
         <div className="small" style={{ padding: "0 10px", opacity: 0.7 }}>
@@ -94,6 +90,7 @@ export default function Layout() {
         <main className="content">
           <Outlet />
         </main>
+        <AiAssistant />
       </div>
     </div>
   );

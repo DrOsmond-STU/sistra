@@ -29,7 +29,7 @@ export default function LoginPage() {
       <form className="card login-card stack" onSubmit={submit}>
         <div>
           <div className="brand">SISTRA</div>
-          <div className="muted small">Sistem Informasi dan Aksi Strategis — MVP</div>
+          <div className="muted small">Sistem Informasi dan Aksi Strategis — Produksi Sistem Informasi dan Aksi Strategis — MVP Distribusi Narasi</div>
         </div>
         <label className="field">
           <span>Nama pengguna</span>

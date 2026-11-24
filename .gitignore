@@ -2,3 +2,6 @@
 *.log
 dist/
 prototype/dist/
+
+# dependensi PHP (dipasang lewat composer / pemasang di aplikasi)
+backend-php/vendor/

@@ -218,7 +218,7 @@ function qint(string $k, int $default, int $min, int $max): int
     if ($v === null) return $default;
     if (!preg_match('/^-?\d+$/', (string)$v)) fail(422, "Parameter $k harus bilangan bulat");
     $i = (int)$v;
-    if ($i < $min || $i > $max) fail(422, "Parameter $k di luar rentang $min–$max");
+    if ($i < $min || $i > $max) fail(422, "Parameter $k di luar rentang {$min}–{$max}");
     return $i;
 }
 function send_json($data, int $status = 200): void

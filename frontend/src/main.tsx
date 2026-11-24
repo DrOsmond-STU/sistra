@@ -3,15 +3,17 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./auth";
 import Layout from "./components/Layout";
-import AlertsPage from "./pages/Alerts";
 import AuditPage from "./pages/Audit";
 import CalendarPage from "./pages/Calendar";
-import ContentPage from "./pages/Content";
-import Dashboard from "./pages/Dashboard";
+import AiSettingsPage from "./pages/AiSettings";
+import AnalyticsPage from "./pages/Analytics";
+import DistributionPage from "./pages/Distribution";
 import DraftsPage from "./pages/Drafts";
+import EditorialPage from "./pages/Editorial";
+import ExecDashboard from "./pages/ExecDashboard";
+import ProductionPage from "./pages/Production";
+import SocialPage from "./pages/Social";
 import LoginPage from "./pages/Login";
-import RepositoryPage from "./pages/Repository";
-import SourcesPage from "./pages/Sources";
 import UsersPage from "./pages/Users";
 import "./styles.css";
 
@@ -22,13 +24,15 @@ function Guarded() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route index element={<Dashboard />} />
-        <Route path="peringatan" element={<AlertsPage />} />
-        <Route path="konten" element={<ContentPage />} />
-        <Route path="sumber" element={<SourcesPage />} />
-        <Route path="naskah" element={<DraftsPage />} />
+        <Route index element={<ExecDashboard />} />
+        <Route path="analitik" element={<AnalyticsPage />} />
+        <Route path="produksi" element={<ProductionPage />} />
+        <Route path="editorial" element={<EditorialPage />} />
         <Route path="kalender" element={<CalendarPage />} />
-        <Route path="repositori" element={<RepositoryPage />} />
+        <Route path="kanal-resmi" element={<SocialPage />} />
+        <Route path="distribusi" element={<DistributionPage />} />
+        <Route path="naskah" element={<DraftsPage />} />
+        <Route path="pengaturan-ai" element={<AiSettingsPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="pengguna" element={<UsersPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
