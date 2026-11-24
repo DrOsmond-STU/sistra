@@ -7,7 +7,8 @@ import { ModeChip, useBusy } from "../components/kit";
 import { Msg, useLoad } from "../components/ui";
 import { STATUS_DRAFT, fmtDateTime } from "../format";
 import type { Draft } from "../types";
-import { FORMAT_LABEL, type Brief, type M4Meta, type Variant } from "../types47";
+import { FORMAT_LABEL, type Brief, type FactItem, type M4Meta, type Variant } from "../types47";
+import LocalContext from "../components/LocalContext";
 
 const BRIEF_STATUS: Record<string, string> = { baru: "Baru", dihasilkan: "Variasi siap", dipakai: "Dijadikan naskah" };
 
@@ -17,20 +18,25 @@ const EXAMPLE = {
   objective: "Meluruskan informasi keliru dan mengarahkan warga ke kanal pengaduan resmi",
   audience: "Ibu rumah tangga dan pedagang pasar",
   key_messages: "Penyaluran beras SPHP tetap berjalan sesuai jadwal. Harga eceran tertinggi tidak berubah. Laporkan penyimpangan ke kanal pengaduan resmi.",
-  facts: "Penyaluran beras SPHP tetap berjalan sesuai jadwal (contoh)\nHET beras SPHP tidak berubah (contoh)\nKanal pengaduan: layanan pengaduan resmi pemerintah (contoh)",
+  facts: [
+    { text: "Penyaluran beras SPHP tetap berjalan sesuai jadwal (contoh)", source: "Siaran pers lembaga pangan (contoh)", url: "https://contoh.invalid/sphp", reliability: "A" },
+    { text: "HET beras SPHP tidak berubah (contoh)", source: "Keputusan kepala lembaga (contoh)", url: "", reliability: "A" },
+    { text: "Kanal pengaduan: layanan pengaduan resmi pemerintah (contoh)", source: "SP4N-LAPOR!", url: "https://www.lapor.go.id", reliability: "B" },
+  ] as FactItem[],
 };
 
 function BriefForm({ meta, onCreated }: { meta: M4Meta; onCreated: (b: Brief) => void }) {
   const provinces = useLoad(() => api<{ code: string; name: string }[]>("/provinces"), []);
-  const [f, setF] = useState({ ...EXAMPLE, title: "", key_messages: "", facts: "", objective: "", audience: "" });
+  const [f, setF] = useState({ ...EXAMPLE, title: "", key_messages: "", facts: [{ text: "", source: "", url: "", reliability: "" }] as FactItem[], objective: "", audience: "" });
   const [err, setErr] = useState("");
   const [saving, setSaving] = useState(false);
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
+  const setFact = (i: number, k: keyof FactItem, v: string) => setF({ ...f, facts: f.facts.map((x, j) => (j === i ? { ...x, [k]: v } : x)) });
 
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setErr(""); setSaving(true);
     try {
-      const b = await api<Brief>("/m4/briefs", { method: "POST", body: { ...f, region_code: f.region_code || null, facts: f.facts.split("\n").map((x) => x.trim()).filter(Boolean) } });
+      const b = await api<Brief>("/m4/briefs", { method: "POST", body: { ...f, region_code: f.region_code || null, facts: f.facts.filter((x) => x.text.trim()) } });
       onCreated(b);
     } catch (ex) { setErr((ex as Error).message); } finally { setSaving(false); }
   };
@@ -55,8 +61,20 @@ function BriefForm({ meta, onCreated }: { meta: M4Meta; onCreated: (b: Brief) =>
         <label className="field"><span>Tujuan komunikasi</span><input value={f.objective} onChange={set("objective")} /></label>
         <label className="field"><span>Khalayak sasaran</span><input value={f.audience} onChange={set("audience")} /></label>
         <label className="field req full"><span>Pesan kunci</span><textarea style={{ minHeight: 70 }} value={f.key_messages} onChange={set("key_messages")} required minLength={5} /></label>
-        <label className="field full"><span>Fakta terverifikasi (satu per baris) — AI hanya boleh memakai fakta ini</span>
-          <textarea style={{ minHeight: 70 }} value={f.facts} onChange={set("facts")} /></label>
+        <div className="field full"><span>Fakta terverifikasi bersumber (S26) — AI hanya boleh memakai fakta ini dan menandai rujukan [F1], [F2], …</span>
+          {f.facts.map((x, i) => (
+            <div className="row" key={i} style={{ alignItems: "flex-start" }}>
+              <span className="small mono" style={{ paddingTop: 8 }}>F{i + 1}</span>
+              <input style={{ flex: 3, minWidth: 180 }} placeholder="Pernyataan fakta" value={x.text} onChange={(e) => setFact(i, "text", e.target.value)} aria-label={`Fakta ${i + 1}`} />
+              <input style={{ flex: 2, minWidth: 140 }} placeholder="Sumber" value={x.source} onChange={(e) => setFact(i, "source", e.target.value)} aria-label={`Sumber ${i + 1}`} />
+              <input style={{ flex: 2, minWidth: 140 }} placeholder="https://tautan-sumber" value={x.url} onChange={(e) => setFact(i, "url", e.target.value)} aria-label={`Tautan ${i + 1}`} />
+              <select value={x.reliability} onChange={(e) => setFact(i, "reliability", e.target.value)} aria-label={`Keandalan ${i + 1}`} title="Keandalan sumber A (sangat andal) – F (tidak dapat dinilai)">
+                <option value="">Keandalan</option>{["A", "B", "C", "D", "E", "F"].map((r) => <option key={r}>{r}</option>)}</select>
+              <button type="button" className="sm ghost" onClick={() => setF({ ...f, facts: f.facts.filter((_, j) => j !== i) })} aria-label="Hapus fakta">✕</button>
+            </div>
+          ))}
+          <div><button type="button" className="sm" onClick={() => setF({ ...f, facts: [...f.facts, { text: "", source: "", url: "", reliability: "" }] })}>+ Fakta</button></div>
+        </div>
       </div>
       <div className="row"><button className="primary" disabled={saving}>{saving ? "Menyimpan…" : "Simpan brief"}</button></div>
     </form>
@@ -145,6 +163,11 @@ export default function ProductionPage() {
           {isAuthor && <button className="primary" onClick={() => { setCreating(true); setSel(null); setMade(null); }}>+ Brief baru</button>}
         </div>
       </div>
+      <div className="tabs" role="tablist">
+        <button role="tab" aria-selected={params.get("tab") !== "lokal"} className={params.get("tab") !== "lokal" ? "on" : ""} onClick={() => setParams({}, { replace: true })}>Brief & variasi (S26–S27)</button>
+        <button role="tab" aria-selected={params.get("tab") === "lokal"} className={params.get("tab") === "lokal" ? "on" : ""} onClick={() => setParams({ tab: "lokal" }, { replace: true })}>Basis konteks lokal 38 provinsi (S28)</button>
+      </div>
+      {params.get("tab") === "lokal" ? <LocalContext /> : <>
       {ai?.mode === "simulasi" && <Msg kind="warn">AI berjalan dalam <b>mode simulasi</b> (kunci API Claude belum diisi). Fitur tetap bisa dicoba; hasil berasal dari templat. {hasRole("admin") && <Link to="/pengaturan-ai">Isi kunci API →</Link>}</Msg>}
       {msg && <Msg kind={msg.kind}>{msg.text}</Msg>}
 
@@ -181,7 +204,10 @@ export default function ProductionPage() {
                   {sel.objective && <><dt>Tujuan</dt><dd>{sel.objective}</dd></>}
                   {sel.audience && <><dt>Khalayak</dt><dd>{sel.audience}</dd></>}
                   <dt>Pesan kunci</dt><dd>{sel.key_messages}</dd>
-                  <dt>Fakta</dt><dd>{sel.facts.length ? <ul style={{ margin: 0, paddingLeft: 18 }}>{sel.facts.map((x) => <li key={x}>{x}</li>)}</ul> : <span className="muted">Tidak ada — AI akan menandai klaim dengan [DATA PERLU DIVERIFIKASI]</span>}</dd>
+                  <dt>Fakta bersumber</dt><dd>{(sel.fact_items ?? []).length ? <ol style={{ margin: 0, paddingLeft: 18 }}>{(sel.fact_items ?? []).map((x, i) => (
+                    <li key={i}>{x.text}<div className="small muted">{x.source || <span className="status-bad">tanpa sumber</span>}{x.reliability ? ` · keandalan ${x.reliability}` : ""}{x.url && <> · <a href={x.url} target="_blank" rel="noreferrer noopener">tautan</a></>}</div></li>))}</ol>
+                    : <span className="muted">Tidak ada — AI akan menandai klaim dengan [DATA PERLU DIVERIFIKASI]</span>}</dd>
+                  {sel.gen_ms != null && <><dt>Waktu pembuatan</dt><dd className={sel.gen_ms <= 15000 ? "status-ok" : "status-bad"}>{(sel.gen_ms / 1000).toFixed(1)} dtk {sel.gen_ms <= 15000 ? "(memenuhi target < 15 dtk)" : "(melebihi target 15 dtk)"}</dd></>}
                   <dt>Dibuat</dt><dd>{sel.author_name} · {fmtDateTime(sel.created_at)}</dd>
                 </dl>
                 {isAuthor && (
@@ -213,6 +239,7 @@ export default function ProductionPage() {
           )}
         </div>
       </div>
+      </>}
     </div>
   );
 }

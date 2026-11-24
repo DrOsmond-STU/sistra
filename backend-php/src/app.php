@@ -16,6 +16,12 @@ require __DIR__ . '/ai_install.php';
 require __DIR__ . '/ai.php';
 require __DIR__ . '/m47.php';
 require __DIR__ . '/seed_m47.php';
+require __DIR__ . '/ai_kak.php';
+require __DIR__ . '/kak.php';
+require __DIR__ . '/kak_routes.php';
+require __DIR__ . '/kak_routes_m6.php';
+require __DIR__ . '/kak_routes_m78.php';
+require __DIR__ . '/seed_kak.php';
 
 /** Migrasi M4–M7 sekali per basis data (penanda di data_dir). Data contoh hanya ditanam pada basis data demo. */
 function ensure_m47(): void
@@ -28,6 +34,21 @@ function ensure_m47(): void
         if (is_file($mark)) return;
         migrate_m47();
         if (getenv('SISTRA_SEED_DEMO') !== '0' && (int)val('SELECT COUNT(*) FROM sources') > 0) tx(fn() => seed_m47());
+        touch($mark);
+    } finally { flock($lock, LOCK_UN); fclose($lock); }
+}
+
+/** Migrasi katalog KAK S26–S65 (penanda .kak-v1). */
+function ensure_kak(): void
+{
+    $mark = data_dir() . '/.kak-v1';
+    if (is_file($mark)) return;
+    $lock = fopen(data_dir() . '/.seed.lock', 'c');
+    flock($lock, LOCK_EX);
+    try {
+        if (is_file($mark)) return;
+        migrate_kak();
+        if (getenv('SISTRA_SEED_DEMO') !== '0' && (int)val('SELECT COUNT(*) FROM social_accounts') > 0) tx(fn() => seed_kak());
         touch($mark);
     } finally { flock($lock, LOCK_UN); fclose($lock); }
 }
@@ -56,13 +77,15 @@ function sistra_handle(): void
             touch(data_dir() . '/.seeded');
         }
         ensure_m47();
+        ensure_kak();
         $len = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
         if ($len > ini_bytes((string)ini_get('post_max_size'))) fail(413, 'Permintaan melebihi batas ukuran unggah server');
         $router = new Router();
         register_routes($router);
         register_routes_m47($router);
+        register_routes_kak($router);
         $pdo = db();
-        $writes = $method !== 'GET' || preg_match('#^/api/(documents/\d+(/versions/\d+/download)?|audit/verify)$#', $path);
+        $writes = $method !== 'GET' || preg_match('#^/api/(documents/\d+(/versions/\d+/download)?|audit/verify|reports(/\d+/docx)?|m7/queue|m7/channels/[A-Z0-9-]+|public/v1/.*)$#', $path);
         if ($writes) tx_begin();
         ob_start();
         $router->dispatch($method, $path);

@@ -143,7 +143,8 @@ export function ScoreRing({ score }: { score: number }) {
   );
 }
 
-export function EditorialReport({ r }: { r: EditorialResult }) {
+export function EditorialReport({ r, onDecide }: { r: EditorialResult; onDecide?: (f: EditorialResult["findings"][number], d: "diterima" | "ditolak") => Promise<void> | void }) {
+  const [decided, setDecided] = useState<Record<number, string>>({});
   return (
     <div className="stack" style={{ gap: 10 }}>
       <div className="row" style={{ gap: 12, flexWrap: "nowrap" }}>
@@ -163,6 +164,12 @@ export function EditorialReport({ r }: { r: EditorialResult }) {
           </div>
           {f.excerpt && <div className="small mono">“{f.excerpt}”</div>}
           <div className="small">{f.suggestion}</div>
+          {onDecide && (decided[i] ? <div className="small muted">Keputusan redaktur: <b>{decided[i]}</b> (tercatat untuk pembelajaran agen editorial)</div> : (
+            <div className="row" style={{ gap: 6 }}>
+              <button className="sm" onClick={async () => { await onDecide(f, "diterima"); setDecided({ ...decided, [i]: "diterima" }); }}>✓ Terima</button>
+              <button className="sm ghost" onClick={async () => { await onDecide(f, "ditolak"); setDecided({ ...decided, [i]: "ditolak" }); }}>✕ Tolak temuan</button>
+            </div>
+          ))}
         </div>
       ))}
     </div>

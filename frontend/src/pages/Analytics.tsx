@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { api } from "../api";
 import { BarList, Tile } from "../components/kit";
+import { EngagementTab, ImpactTab, QualityTab } from "./AnalyticsKak";
 import { Msg, useLoad } from "../components/ui";
 import { STATUS_DRAFT, fmtPct, nf } from "../format";
 import { AI_FEATURE_LABEL, CATEGORY_LABEL, COMMENT_STATUS, FORMAT_LABEL, HEALTH_LABEL, type Analytics } from "../types47";
 
 const TABS = [
-  ["m4", "M4 · Produksi"], ["m5", "M5 · Editorial"], ["m6", "M6 · Kanal resmi"], ["m7", "M7 · Distribusi"], ["ai", "Penggunaan AI"],
+  ["m4", "M4 · Produksi"], ["m5", "M5 · Editorial"], ["m6", "M6 · Kanal resmi"], ["m7", "M7 · Distribusi"], ["eng", "Keterlibatan per jam (S56)"],
+  ["dampak", "Dampak & IEKP (S57, S59)"], ["mutu", "Mutu AI (S64)"], ["ai", "Penggunaan AI"],
 ] as const;
 
 export default function AnalyticsPage() {
@@ -115,6 +117,9 @@ export default function AnalyticsPage() {
             </div>
           )}
 
+          {tab === "eng" && <EngagementTab />}
+          {tab === "dampak" && <ImpactTab />}
+          {tab === "mutu" && <QualityTab />}
           {tab === "ai" && (
             <div className="card table-wrap">
               <h2>Pemakaian AI per fitur</h2>

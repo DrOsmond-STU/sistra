@@ -14,6 +14,7 @@ Port backend FastAPI (`../backend`) ke PHP 8.3 + SQLite untuk hosting cPanel yan
 | `src/ai_install.php` | pemasang pustaka SDK di server tanpa shell: unduh paket pada commit yang dikunci `composer.lock`, berkas runtime Composer diverifikasi SHA-256 |
 | `src/m47.php` | M4 Produksi Narasi, M5 Editorial & Persetujuan, M6 Kanal Medsos Resmi (manual), M7 Distribusi 39 Kanal, dashboard eksekutif & analitik |
 | `src/seed_m47.php` | data demo sintetis M4–M7 bertema isu aktual (pangan, MBG, banjir, judol, hoaks bansos, Nataru, PDP, dll.) |
+| `src/kak.php`, `src/kak_routes*.php`, `src/ai_kak.php`, `src/seed_kak.php` | kelengkapan katalog KAK S26–S65: fakta bersumber & verifikasi klaim, konteks lokal 38 provinsi, studio multimedia, kalender terpadu, notifikasi, bank aset & templat, liputan, paket respons cepat, mitra KOL, kampanye, kuota, masking PII, CMS kanal, jadwal jam puncak, OG/Schema.org, portal media, gerbang API mitra, uptime 5 titik, metrik per jam, IEKP, uji sentimen, mutu AI, laporan berkala DOCX |
 | `vendor-meta/` | berkas autoload hasil `composer dump-autoload`, disalin pemasang ke `vendor/` paling akhir |
 | `public/api.php`, `public/router-dev.php` | front controller dan router untuk `php -S` |
 | `bin/sistra-cli.php` | `reset` / `verify` untuk pengembangan dan uji (bukan untuk produksi) |
@@ -38,4 +39,4 @@ Suite uji backend Python disalin ke `tests/` dan dijalankan lewat HTTP terhadap 
 SISTRA_DATA_DIR=/tmp/sistra-php PYTHONPATH=../backend ../backend/.venv/bin/python -m pytest tests
 ```
 
-Hasil saat ini: 62 lulus (termasuk `tests/test_m47.py` untuk M4–M7, dashboard, dan AI). Pemasangan di hosting: lihat `deploy/README.md` bagian C.
+Hasil saat ini: 75 lulus (termasuk `tests/test_m47.py` dan `tests/test_kak.py` untuk katalog KAK S26–S65). Pemasangan di hosting: lihat `deploy/README.md` bagian C.

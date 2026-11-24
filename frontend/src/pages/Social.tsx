@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from "react";
+import { useSearchParams } from "react-router-dom";
+import { CampaignsTab, PacksTab, PartnersTab, QuotaPanel, ThreadView } from "./SocialKak";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import { ModeChip, Prio, Tile, dueText, useBusy } from "../components/kit";
@@ -6,7 +8,7 @@ import { Msg, useLoad } from "../components/ui";
 import { fmtDateTime, nf, relTime, toLocalInput } from "../format";
 import { CATEGORY_LABEL, COMMENT_STATUS, FORMAT_LABEL, type Account, type Card, type KbEntry, type PostTask, type SocialComment } from "../types47";
 
-type Tab = "komentar" | "tugas" | "akun" | "bahan";
+type Tab = "komentar" | "tugas" | "akun" | "bahan" | "paket" | "kampanye" | "mitra";
 type Note = { kind: "ok" | "error" | "warn"; text: string } | null;
 const PLATFORMS: Record<string, string> = { instagram: "Instagram", x: "X", tiktok: "TikTok", facebook: "Facebook", youtube: "YouTube", threads: "Threads" };
 
@@ -19,6 +21,7 @@ function CommentCard({ c, canReply, canTriage, onChange }: { c: SocialComment; c
     try { const r = await api<SocialComment>(path, { method: "POST", body }); onChange(r); if (key === "sg") setReply(r.suggested_reply ?? ""); setErr(""); } catch (e) { setErr((e as Error).message); }
   });
   const open = c.status === "baru" || c.status === "ditriase";
+  const [thread, setThread] = useState(false);
   return (
     <div className={`cmt${c.bot_flag ? " bot" : c.priority === "tinggi" ? " hi" : ""}`}>
       <div className="who">
@@ -37,6 +40,9 @@ function CommentCard({ c, canReply, canTriage, onChange }: { c: SocialComment; c
         {c.ai_mode && <ModeChip mode={c.ai_mode} />}
       </div>
       {c.reason && <div className="small muted">Alasan triase: {c.reason}</div>}
+      {(c.pii_masked ?? 0) > 0 && <div className="small muted">🔒 {c.pii_masked} data pribadi (NIK/telepon/surel/rekening) disamarkan sesuai UU PDP</div>}
+      {((c.replies ?? 0) > 0 || c.parent_id) && <div><button className="sm ghost" onClick={() => setThread((x) => !x)}>{thread ? "Sembunyikan utas" : c.parent_id ? "Lihat utas induk" : `Lihat ${c.replies} balasan (sub-komentar)`}</button></div>}
+      {thread && <ThreadView id={c.id} onClose={() => setThread(false)} />}
       {c.status === "dibalas" && c.reply_text && (
         <div className="reply-box"><b>Balasan resmi</b> oleh {c.replied_by_name} · {fmtDateTime(c.replied_at)}<div>{c.reply_text}</div></div>
       )}
@@ -327,7 +333,9 @@ function KbTab({ setMsg }: { setMsg: (n: Note) => void }) {
 }
 
 export default function SocialPage() {
-  const [tab, setTab] = useState<Tab>("komentar");
+  const [params, setParams] = useSearchParams();
+  const tab = (params.get("tab") as Tab) || "komentar";
+  const setTab = (t: Tab) => setParams({ tab: t }, { replace: true });
   const [msg, setMsg] = useState<Note>(null);
   const accounts = useLoad(() => api<Account[]>("/m6/accounts"), []);
   const acc = accounts.data ?? [];
@@ -349,13 +357,16 @@ export default function SocialPage() {
       </div>
       {msg && <Msg kind={msg.kind}>{msg.text}</Msg>}
       <div className="tabs" role="tablist">
-        {([["komentar", "Kotak masuk komentar"], ["tugas", "Tugas unggah"], ["akun", "Akun resmi"], ["bahan", "Bahan respons"]] as [Tab, string][]).map(([k, v]) => (
+        {([["komentar", "Kotak masuk (S43)"], ["paket", "Paket respons cepat (S41)"], ["tugas", "Tugas unggah (S45)"], ["kampanye", "Kampanye (S44, S48)"], ["mitra", "Mitra KOL (S42)"], ["akun", "Akun & kuota (S40)"], ["bahan", "Bahan respons"]] as [Tab, string][]).map(([k, v]) => (
           <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => { setTab(k); setMsg(null); }}>{v}</button>
         ))}
       </div>
       {tab === "komentar" && accounts.data && <CommentsTab accounts={acc} setMsg={setMsg} />}
       {tab === "tugas" && accounts.data && <TasksTab accounts={acc} setMsg={setMsg} />}
-      {tab === "akun" && <AccountsTab accounts={acc} reload={accounts.reload} setMsg={setMsg} />}
+      {tab === "akun" && <><QuotaPanel setMsg={setMsg} /><AccountsTab accounts={acc} reload={accounts.reload} setMsg={setMsg} /></>}
+      {tab === "paket" && <PacksTab setMsg={setMsg} />}
+      {tab === "kampanye" && <CampaignsTab setMsg={setMsg} />}
+      {tab === "mitra" && <PartnersTab setMsg={setMsg} />}
       {tab === "bahan" && <KbTab setMsg={setMsg} />}
     </div>
   );

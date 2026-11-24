@@ -563,6 +563,12 @@ function register_routes(Router $r): void
         q('UPDATE drafts SET status = ?, updated_at = ? WHERE id = ?', [$to, $now, $d['id']]);
         if ($to === 'tayang') q("UPDATE calendar_entries SET status = 'tayang' WHERE draft_id = ? AND status = 'rencana'", [$d['id']]);
         elseif ($to === 'ditarik') q("UPDATE calendar_entries SET status = 'batal' WHERE draft_id = ? AND status = 'rencana'", [$d['id']]);
+        if ($to === 'ditarik') q("UPDATE distributions SET status = 'ditarik', taken_down_at = ?, takedown_reason = ? WHERE draft_id = ? AND status = 'terkirim'", [$now, 'Naskah ditarik: ' . mb_substr(trim($comment), 0, 200), $d['id']]);
+        if ($to === 'ditarik') q("UPDATE distributions SET status = 'batal' WHERE draft_id = ? AND status = 'terjadwal'", [$d['id']]);
+        $link = '/editorial?id=' . $d['id'];
+        if ($to === 'ditinjau') notify(users_with_roles('redaktur', 'pimpinan'), 'persetujuan', "Menunggu tinjauan: {$d['title']}", $link, (int)$u['id']);
+        if ($to === 'disetujui') { notify([(int)$d['created_by']], 'persetujuan', "Disetujui: {$d['title']}", $link, (int)$u['id']); notify(users_with_roles('operator'), 'distribusi', "Siap disalurkan: {$d['title']}", '/distribusi', (int)$u['id']); }
+        if ($to === 'draf') notify([(int)$d['created_by']], 'persetujuan', "Dikembalikan untuk revisi: {$d['title']}" . (trim($comment) !== '' ? ' — ' . mb_substr(trim($comment), 0, 120) : ''), $link, (int)$u['id']);
         audit_record($u, 'naskah.transisi', 'draft', $d['id'], ['from' => $d['status'], 'to' => $to, 'version' => (int)$d['version'], 'hash' => $d['content_hash'], 'signed' => $sig !== null]);
         send_json(draft_out(get_draft_row((int)$id), $u, true));
     });

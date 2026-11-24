@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth";
 import { ROLE_LABEL } from "../format";
 import AiAssistant from "./AiAssistant";
+import NotificationBell from "./NotificationBell";
 import { ClassChip } from "./ui";
 
 interface NavItem { to: string; label: string; code?: string; roles?: string[]; group?: string }
@@ -11,10 +12,14 @@ interface NavItem { to: string; label: string; code?: string; roles?: string[]; 
 // sudah dikelola aplikasi lain. Fokus SISTRA: M4–M7 + dashboard + asisten AI.
 const NAV: NavItem[] = [
   { to: "/", label: "Dashboard Eksekutif", group: "Ringkasan" },
-  { to: "/analitik", label: "Dashboard Analitik" },
+  { to: "/analitik", label: "Dashboard Analitik", code: "M8" },
+  { to: "/laporan", label: "Laporan Berkala", code: "M8" },
+  { to: "/kak", label: "Matriks Kepatuhan KAK" },
   { to: "/produksi", label: "Produksi Narasi", code: "M4", group: "Alur kerja" },
+  { to: "/studio", label: "Studio Multimedia", code: "M4" },
   { to: "/editorial", label: "Editorial & Persetujuan", code: "M5" },
-  { to: "/kalender", label: "Kalender Tayang", code: "M5" },
+  { to: "/kalender", label: "Kalender Terpadu", code: "M5" },
+  { to: "/aset", label: "Aset, Templat & Liputan", code: "M5" },
   { to: "/kanal-resmi", label: "Kanal Medsos Resmi", code: "M6" },
   { to: "/distribusi", label: "Distribusi 39 Wilayah", code: "M7" },
   { to: "/naskah", label: "Daftar Naskah", group: "Lainnya" },
@@ -83,6 +88,7 @@ export default function Layout() {
               {user.roles.map((r) => ROLE_LABEL[r] ?? r).join(", ")} · {user.unit.code}
             </div>
           </div>
+          <NotificationBell />
           <ClassChip code={user.clearance} label={`Clearance: ${user.clearance_label}`} />
           <button className="ghost" onClick={toggleTheme} aria-label="Ganti tema terang/gelap">Tema</button>
           <button onClick={logout}>Keluar</button>

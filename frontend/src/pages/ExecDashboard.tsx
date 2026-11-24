@@ -3,8 +3,23 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 import { ModeChip, Prio, StackBar, Tile, TrendColumns, TrendLegend, dueText } from "../components/kit";
 import { Msg, useLoad } from "../components/ui";
+import ProvinceMap from "../components/ProvinceMap";
 import { fmtDateTime, fmtPct, nf } from "../format";
 import { FORMAT_LABEL, type ExecSummary } from "../types47";
+
+function ImpactCard() {
+  const d = useLoad(() => api<{ national: number; issues: { name: string; score: number }[] }>("/m8/impact"), []);
+  const r = useLoad(() => api<{ id: number; title: string; auto: boolean }[]>("/reports"), []);
+  return (
+    <div className="card stack" style={{ gap: 10 }}>
+      <div className="row between"><h2 style={{ margin: 0 }}>Efektivitas komunikasi</h2><Link to="/analitik" className="btn sm">Rinci →</Link></div>
+      <div className="tile"><div className="label">IEKP nasional</div><div className="value num">{d.data?.national ?? "-"}<span className="small muted"> / 100</span></div></div>
+      {d.data?.issues.slice(0, 5).map((i) => <div key={i.name}><div className="row between small"><span>{i.name}</span><b>{i.score}</b></div><div className="meter"><span style={{ width: `${i.score}%` }} /></div></div>)}
+      <div className="row between"><b className="small">Laporan terbaru</b><Link to="/laporan" className="small">Semua laporan →</Link></div>
+      {r.data?.slice(0, 2).map((x) => <Link key={x.id} to="/laporan" className="small">{x.auto ? "⚙ " : ""}{x.title}</Link>)}
+    </div>
+  );
+}
 
 export default function ExecDashboard() {
   const { data, error, loading, reload } = useLoad(() => api<ExecSummary>("/exec/summary"), []);
@@ -101,6 +116,14 @@ export default function ExecDashboard() {
           ]} />
           <div className="small muted">Uji ketersediaan disimulasikan; belum tersambung ke CMS kanal sungguhan.</div>
         </div>
+      </div>
+
+      <div className="grid g-main">
+        <div className="card">
+          <div className="row between" style={{ marginBottom: 8 }}><h2 style={{ margin: 0 }}>Peta 38 provinsi</h2><Link to="/distribusi?tab=cms" className="btn sm">Kanal →</Link></div>
+          <ProvinceMap />
+        </div>
+        <ImpactCard />
       </div>
 
       <div className="grid g2">

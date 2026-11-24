@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import DraftTools, { type DraftWithEditorial } from "../components/DraftTools";
+import RevisionDiff from "../components/RevisionDiff";
 import { Prio, dueText, useBusy } from "../components/kit";
 import { Msg, useLoad } from "../components/ui";
 import { ACTION_LABEL, STATUS_DRAFT, fmtDateTime, toLocalInput } from "../format";
@@ -167,6 +168,11 @@ function Detail({ id, team, onClose, onChanged }: { id: number; team: Board["tea
       </div>
 
       <DraftTools key={d.id + ":" + d.version} draft={d} onChanged={() => { load(); onChanged(); }} />
+
+      <div className="stack" style={{ gap: 8 }}>
+        <h3 style={{ margin: 0 }}>Riwayat revisi & perbandingan</h3>
+        <RevisionDiff draftId={d.id} version={d.version} />
+      </div>
 
       <div>
         <h3>Riwayat persetujuan</h3>

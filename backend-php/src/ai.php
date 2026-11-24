@@ -126,6 +126,7 @@ const FORMAT_LABEL = [
     'rilis' => 'Siaran pers', 'artikel' => 'Artikel/berita portal', 'opini' => 'Opini/kolom', 'caption' => 'Unggahan media sosial (caption)',
     'thread' => 'Utas X/Threads', 'carousel' => 'Carousel Instagram (per slide)', 'video' => 'Naskah video pendek 9:16',
     'podcast' => 'Naskah audio/podcast', 'infografis' => 'Teks infografis (judul, poin data, sumber)', 'faq' => 'Tanya-jawab (FAQ) warga',
+    'editorial' => 'Editorial/tajuk institusi', 'briefing' => 'Briefing sheet pimpinan (poin ringkas)',
 ];
 const ANGLES = ['Informatif berbasis data', 'Empatik pada warga terdampak', 'Meluruskan hoaks dengan tegas', 'Solutif dan ajakan bertindak', 'Lokal dengan bahasa sehari-hari'];
 
@@ -140,28 +141,31 @@ function ai_generate_content(?array $u, array $brief, int $n): array
         ai_log($u, 'generate', 'simulasi', null, 0, 0, 0, true);
         return ['mode' => 'simulasi', 'variants' => $out, 'notes' => 'Mode simulasi: isi kunci API di Pengaturan AI agar konten disusun oleh Claude.'];
     }
-    $facts = implode("\n", array_map(fn($f) => "- $f", $brief['facts'] ?: []));
+    $facts = !empty($brief['fact_items']) ? kak_fact_lines($brief['fact_items']) : implode("\n", array_map(fn($f) => "- $f", $brief['facts'] ?: []));
     $prompt = "Susun {$n} variasi konten dengan sudut pandang berbeda.\n\nFormat: {$fmt}\nIsu: {$brief['issue_name']}\nJudul kerja: {$brief['title']}\n"
         . "Tujuan komunikasi: {$brief['objective']}\nKhalayak: {$brief['audience']}\nWilayah: {$region}\nNada: {$brief['tone']}\n"
         . "Pesan kunci: {$brief['key_messages']}\nFakta terverifikasi (hanya pakai ini):\n{$facts}\n\n"
         . "Pakai sudut pandang berurutan dari daftar ini: " . implode('; ', array_slice(ANGLES, 0, $n)) . ".\n"
         . "Sesuaikan panjang dengan format (caption ≤ 2.200 karakter, utas 4–7 bagian bernomor, carousel 5–8 slide bertanda 'Slide n:', video bertanda adegan dan durasi ≤ 60 detik, siaran pers 3–5 paragraf).\n"
         . ($region !== 'Nasional' ? "Lokalkan untuk warga {$region}: rujukan tempat, layanan, dan istilah setempat tanpa mengarang nama pejabat.\n" : '')
+        . "Panjang maksimal 800 kata per variasi. Setiap kalimat yang memuat angka/data wajib diakhiri penanda sumber fakta seperti [F1].\n"
         . "Sertakan tagar yang relevan untuk format media sosial (kosongkan untuk format lain).";
     $schema = schema_obj(['variants' => ['type' => 'array', 'items' => schema_obj(['angle' => STR, 'title' => STR, 'body' => STR, 'hashtags' => ['type' => 'array', 'items' => STR]])], 'notes' => STR]);
     $r = ai_call($u, 'generate', 'Tugas: menyusun draf konten komunikasi publik multi-format.', [['role' => 'user', 'content' => $prompt]], $schema, 'low', 12000);
     return ['mode' => 'claude', 'model' => $r['model'], 'variants' => array_slice($r['json']['variants'] ?? [], 0, $n), 'notes' => $r['json']['notes'] ?? ''];
 }
 
-function ai_localize(?array $u, string $title, string $body, string $province): array
+function ai_localize(?array $u, string $title, string $body, string $province, array $ctx = []): array
 {
     if (!ai_live()) {
         ai_log($u, 'pelokalan', 'simulasi', null, 0, 0, 0, true);
-        return ['mode' => 'simulasi', 'title' => "$title — $province", 'body' => "[SIMULASI PELOKALAN · {$province}]\nWarga {$province} dapat memperoleh informasi lanjutan melalui kanal resmi pemerintah daerah setempat.\n\n" . $body, 'notes' => 'Mode simulasi.'];
+        $local = $ctx ? "\n\nKonteks lokal terverifikasi:\n" . implode("\n", array_map(fn($x) => '• ' . $x, array_slice($ctx, 0, 4))) : "\n\n(Belum ada konteks lokal terverifikasi untuk {$province}.)";
+        return ['mode' => 'simulasi', 'title' => "$title — $province", 'body' => "[SIMULASI PELOKALAN · {$province}]\nWarga {$province} dapat memperoleh informasi lanjutan melalui kanal resmi pemerintah daerah setempat.\n\n" . $body . $local, 'notes' => 'Mode simulasi. Fakta lokal hanya diambil dari basis data konteks lokal terverifikasi (' . count($ctx) . ' butir).'];
     }
     $schema = schema_obj(['title' => STR, 'body' => STR, 'notes' => STR]);
     $r = ai_call($u, 'pelokalan', 'Tugas: melokalkan naskah nasional untuk satu provinsi.', [['role' => 'user', 'content' =>
         "Lokalkan naskah berikut untuk warga provinsi {$province}. Pertahankan semua fakta, jangan menambah angka atau nama pejabat baru. "
+        . "Fakta lokal HANYA boleh diambil dari basis data konteks lokal terverifikasi berikut:\n" . ($ctx ? implode("\n", $ctx) : '(kosong — jangan menambah rujukan lokal spesifik)') . "\n"
         . "Sesuaikan rujukan tempat, istilah, dan ajakan ke kanal resmi daerah. Catat di 'notes' bagian yang perlu diverifikasi tim daerah.\n\nJUDUL: {$title}\n\nISI:\n{$body}"]], $schema, 'low', 8000);
     return ['mode' => 'claude', 'model' => $r['model']] + $r['json'];
 }
@@ -177,6 +181,9 @@ function ai_editorial_check(?array $u, string $title, string $body, array $facts
     $schema = schema_obj(['score' => ['type' => 'integer'], 'summary' => STR,
         'findings' => ['type' => 'array', 'items' => schema_obj(['category' => $cat, 'severity' => $sev, 'excerpt' => STR, 'suggestion' => STR])]]);
     $factText = $facts ? implode("\n", array_map(fn($f) => "- $f", $facts)) : '(tidak ada daftar fakta)';
+    // belajar dari koreksi redaktur: temuan yang ditolak redaksi jangan diulang
+    $rej = all("SELECT category, excerpt, note FROM editorial_feedback WHERE decision = 'ditolak' ORDER BY id DESC LIMIT 12");
+    if ($rej) $factText .= "\n\nPREFERENSI REDAKSI (temuan serupa pernah ditolak redaktur, jangan diulang kecuali benar-benar salah):\n" . implode("\n", array_map(fn($x) => "- [{$x['category']}] \"{$x['excerpt']}\"" . ($x['note'] ? " — {$x['note']}" : ''), $rej));
     $r = ai_call($u, 'editorial', 'Tugas: agen editorial yang memeriksa naskah sebelum diajukan ke pimpinan.', [['role' => 'user', 'content' =>
         "Periksa naskah ini. Kategori temuan: ejaan (PUEBI/EYD), sara (ujaran kebencian/isu sensitif), nada (terlalu menyerang/defensif), "
         . "fakta (klaim tidak didukung daftar fakta), hukum (potensi melanggar aturan/hak), kejelasan. Beri skor kelayakan 0–100. "

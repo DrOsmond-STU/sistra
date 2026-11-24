@@ -8,10 +8,12 @@ export interface AiStatus {
 export interface Variant {
   id: number; angle: string; title: string; body: string; hashtags: string[]; ai_mode: string; draft_id: number | null; created_at: string;
 }
+export interface FactItem { text: string; source: string; url: string; reliability: string }
 export interface Brief {
   id: number; title: string; issue_code: string | null; issue_name: string | null; format: string; objective: string; audience: string;
   region_code: string | null; region_name: string; tone: string; key_messages: string; facts: string[]; status: string; ai_mode: string | null;
   created_by: number; author_name: string; created_at: string; variant_count: number; variants?: Variant[]; notes?: string; mode?: string;
+  fact_items?: FactItem[]; gen_ms?: number | null;
 }
 export interface M4Meta {
   formats: { id: string; label: string }[]; tones: string[]; angles: string[]; issues: { code: string; name: string }[]; ai: AiStatus;
@@ -41,6 +43,7 @@ export interface SocialComment {
   id: number; account_id: number; platform: string; handle: string; author: string; text: string; at: string; issue_code: string | null;
   category: string | null; sentiment: string | null; priority: string | null; reason: string | null; bot_flag: boolean; status: string;
   suggested_reply: string | null; reply_text: string | null; replied_by_name: string | null; replied_at: string | null; ai_mode: string | null;
+  pii_masked?: number; parent_id?: number | null; replies?: number;
 }
 export interface KbEntry { id: number; issue_code: string | null; title: string; question: string; answer: string; sources: string; status: string; updated_at: string }
 

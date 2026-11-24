@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { ApiTab, ChannelCms, PackageTab, PressTab, SmartSchedule, UptimeTab } from "./DistributionKak";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import { Tile, useBusy } from "../components/kit";
@@ -20,6 +21,8 @@ export default function DistributionPage() {
   const [picked, setPicked] = useState<string[]>([]);
   const [filter, setFilter] = useState("");
   const [msg, setMsg] = useState<{ kind: "ok" | "error" | "warn"; text: string } | null>(null);
+  const [params, setParams] = useSearchParams();
+  const tab = params.get("tab") ?? "salur";
   const [busy, run] = useBusy();
   const canSend = hasRole("operator");
   const canCheck = hasRole("operator", "admin");
@@ -75,7 +78,18 @@ export default function DistributionPage() {
       </div>
       <Msg kind="warn">Purwarupa: pengiriman ke CMS kanal dan uji ketersediaan masih <b>disimulasikan</b>. Tautan hasil memakai domain contoh.</Msg>
       {msg && <Msg kind={msg.kind}>{msg.text}</Msg>}
-
+      <div className="tabs" role="tablist">
+        {([["salur", "Salurkan (S50)"], ["cms", "Kanal & CMS (S49)"], ["jadwal", "Jadwal cerdas (S51)"], ["paket", "Metadata & format (S52)"], ["pers", "Portal media (S53)"],
+          ...(hasRole("admin") ? [["api", "API mitra (S54)"]] : []), ["uptime", "Uptime (S55)"]] as [string, string][]).map(([k, v]) => (
+          <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => { setParams({ tab: k }, { replace: true }); setMsg(null); }}>{v}</button>))}
+      </div>
+      {tab === "cms" && <ChannelCms setMsg={setMsg} />}
+      {tab === "jadwal" && <SmartSchedule setMsg={setMsg} />}
+      {tab === "paket" && <PackageTab setMsg={setMsg} />}
+      {tab === "pers" && <PressTab setMsg={setMsg} />}
+      {tab === "api" && <ApiTab setMsg={setMsg} />}
+      {tab === "uptime" && <UptimeTab setMsg={setMsg} />}
+      {tab === "salur" && <>
       <div className="grid g4">
         <Tile label="Kanal normal" value={`${count.normal} / ${ch.length}`} tone={count.gangguan ? "bad" : count.lambat ? "warn" : "good"}
               foot={`${count.lambat} lambat · ${count.gangguan} gangguan`} />
@@ -171,6 +185,7 @@ export default function DistributionPage() {
           })}
         </div>
       </div>
+      </>}
     </div>
   );
 }

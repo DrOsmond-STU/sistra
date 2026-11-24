@@ -6,6 +6,11 @@ import Layout from "./components/Layout";
 import AuditPage from "./pages/Audit";
 import CalendarPage from "./pages/Calendar";
 import AiSettingsPage from "./pages/AiSettings";
+import AssetsPage from "./pages/Assets";
+import KakMatrix from "./pages/KakMatrix";
+import PressPortal from "./pages/PressPortal";
+import ReportsPage from "./pages/Reports";
+import StudioPage from "./pages/Studio";
 import AnalyticsPage from "./pages/Analytics";
 import DistributionPage from "./pages/Distribution";
 import DraftsPage from "./pages/Drafts";
@@ -19,6 +24,9 @@ import "./styles.css";
 
 function Guarded() {
   const { user, loading } = useAuth();
+  // S53: portal media publik (tanpa akun) memakai tautan berwaktu
+  const press = window.location.pathname.match(/^\/pers\/([A-Za-z0-9_-]+)$/);
+  if (press) return <PressPortal token={press[1]} />;
   if (loading) return <div className="empty">Memuat…</div>;
   if (!user) return <LoginPage />;
   return (
@@ -29,6 +37,10 @@ function Guarded() {
         <Route path="produksi" element={<ProductionPage />} />
         <Route path="editorial" element={<EditorialPage />} />
         <Route path="kalender" element={<CalendarPage />} />
+        <Route path="studio" element={<StudioPage />} />
+        <Route path="aset" element={<AssetsPage />} />
+        <Route path="laporan" element={<ReportsPage />} />
+        <Route path="kak" element={<KakMatrix />} />
         <Route path="kanal-resmi" element={<SocialPage />} />
         <Route path="distribusi" element={<DistributionPage />} />
         <Route path="naskah" element={<DraftsPage />} />

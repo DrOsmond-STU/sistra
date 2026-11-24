@@ -13,7 +13,7 @@ foreach (array_slice($argv, 2) as $a) {
 if ($cmd === 'verify') { echo json_encode(audit_verify()), "\n"; exit(0); }
 if ($cmd !== 'reset') { fwrite(STDERR, "Penggunaan: sistra-cli.php reset [--demo] [--password=SANDI]\n"); exit(2); }
 $dir = data_dir();
-foreach (['sistra.db', 'sistra.db-wal', 'sistra.db-shm', '.seeded', '.m47-v1', 'kredensial.txt'] as $f) @unlink("$dir/$f");
+foreach (['sistra.db', 'sistra.db-wal', 'sistra.db-shm', '.seeded', '.m47-v1', '.kak-v1', 'kredensial.txt'] as $f) @unlink("$dir/$f");
 if (is_dir("$dir/blobs")) exec('rm -rf ' . escapeshellarg("$dir/blobs"));
 $pw = $opts['password'] ?? null;
 if ($pw === null) { fwrite(STDERR, "--password wajib untuk reset uji\n"); exit(2); }
@@ -24,5 +24,7 @@ tx(function () use ($pw, $opts) {
 });
 migrate_m47();
 if (isset($opts['demo'])) tx(fn() => seed_m47());
+migrate_kak();
+if (isset($opts['demo'])) tx(fn() => seed_kak());
 touch("$dir/.seeded");
 echo "ok\n";

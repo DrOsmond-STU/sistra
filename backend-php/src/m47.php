@@ -39,7 +39,7 @@ SQL);
 }
 
 // ======================= utilitas =======================
-const FORMATS = ['rilis', 'artikel', 'opini', 'caption', 'thread', 'carousel', 'video', 'podcast', 'infografis', 'faq'];
+const FORMATS = ['rilis', 'artikel', 'opini', 'editorial', 'briefing', 'caption', 'thread', 'carousel', 'video', 'podcast', 'infografis', 'faq'];
 const TONES = ['informatif', 'empatik', 'tegas', 'mengajak', 'santai'];
 const PLATFORMS = ['instagram' => 'Instagram', 'x' => 'X', 'tiktok' => 'TikTok', 'facebook' => 'Facebook', 'youtube' => 'YouTube', 'threads' => 'Threads'];
 const AUTHOR_OR_EDITOR = ['redaktur', 'produser', 'analis', 'pimpinan'];
@@ -97,7 +97,8 @@ function brief_out(array $b, bool $detail = false): array
     $i = $b['issue_id'] ? one('SELECT code, name FROM issues WHERE id = ?', [$b['issue_id']]) : null;
     $o = ['id' => (int)$b['id'], 'title' => $b['title'], 'issue_code' => $i['code'] ?? null, 'issue_name' => $i['name'] ?? null, 'format' => $b['format'],
         'objective' => $b['objective'], 'audience' => $b['audience'], 'region_code' => $b['region_code'], 'region_name' => province_name($b['region_code']) ?? 'Nasional',
-        'tone' => $b['tone'], 'key_messages' => $b['key_messages'], 'facts' => jdec($b['facts']), 'status' => $b['status'], 'ai_mode' => $b['ai_mode'],
+        'tone' => $b['tone'], 'key_messages' => $b['key_messages'], 'facts' => array_map(fn($f) => $f['text'], fact_items($b['facts'])), 'fact_items' => fact_items($b['facts']), 'gen_ms' => isset($b['gen_ms']) ? (int)$b['gen_ms'] : null,
+        'status' => $b['status'], 'ai_mode' => $b['ai_mode'],
         'created_by' => (int)$b['created_by'], 'author_name' => user_name((int)$b['created_by']), 'created_at' => $b['created_at'],
         'variant_count' => (int)val('SELECT COUNT(*) FROM brief_variants WHERE brief_id = ?', [$b['id']])];
     if ($detail) $o['variants'] = array_map(fn($v) => ['id' => (int)$v['id'], 'angle' => $v['angle'], 'title' => $v['title'], 'body' => $v['body'],
@@ -136,7 +137,10 @@ function task_out(array $t): array
 function comment_out(array $c): array
 {
     $a = one('SELECT platform, handle FROM social_accounts WHERE id = ?', [$c['account_id']]);
-    return ['id' => (int)$c['id'], 'account_id' => (int)$c['account_id'], 'platform' => $a['platform'] ?? '', 'handle' => $a['handle'] ?? '', 'author' => $c['author'], 'text' => $c['text'],
+    [$text, $pii] = pii_mask((string)$c['text']);
+    return ['id' => (int)$c['id'], 'account_id' => (int)$c['account_id'], 'platform' => $a['platform'] ?? '', 'handle' => $a['handle'] ?? '', 'author' => $c['author'], 'text' => $text,
+        'pii_masked' => $pii, 'parent_id' => isset($c['parent_id']) && $c['parent_id'] ? (int)$c['parent_id'] : null,
+        'replies' => (int)val('SELECT COUNT(*) FROM social_comments WHERE parent_id = ?', [$c['id']]),
         'at' => $c['at'], 'issue_code' => $c['issue_id'] ? val('SELECT code FROM issues WHERE id = ?', [$c['issue_id']]) : null, 'category' => $c['category'], 'sentiment' => $c['sentiment'],
         'priority' => $c['priority'], 'reason' => $c['reason'], 'bot_flag' => (bool)$c['bot_flag'], 'status' => $c['status'], 'suggested_reply' => $c['suggested_reply'],
         'reply_text' => $c['reply_text'], 'replied_by_name' => user_name($c['replied_by'] ? (int)$c['replied_by'] : null), 'replied_at' => $c['replied_at'], 'ai_mode' => $c['ai_mode']];
@@ -350,7 +354,9 @@ function register_routes_m47(Router $r): void
         $tone = (string)($b['tone'] ?? 'informatif'); if (!in_array($tone, TONES, true)) fail(422, 'Nada tidak dikenal');
         $iss = issue_by_code($b['issue_code'] ?? null); if (!$iss) fail(422, 'Pilih isu');
         $reg = ($b['region_code'] ?? null) ?: null; if ($reg !== null && !isset(PROVINCES[$reg])) fail(422, 'Kode provinsi tidak dikenal');
-        $facts = array_values(array_filter(array_map(fn($x) => trim((string)$x), list_field($b, 'facts') ?? []), fn($x) => $x !== ''));
+        $rawFacts = $b['facts'] ?? [];
+        if (!is_array($rawFacts) || !array_is_list($rawFacts)) fail(422, 'Kolom facts harus berupa daftar');
+        $facts = fact_items($rawFacts);
         $now = now_iso();
         $id = insert('briefs', ['title' => trim(str_field($b, 'title', 5, 200)), 'issue_id' => $iss['id'], 'format' => $fmt, 'objective' => trim((string)($b['objective'] ?? '')),
             'audience' => trim((string)($b['audience'] ?? '')), 'region_code' => $reg, 'tone' => $tone, 'key_messages' => trim(str_field($b, 'key_messages', 5, 2000)),
@@ -368,8 +374,10 @@ function register_routes_m47(Router $r): void
         $b = one('SELECT * FROM briefs WHERE id = ?', [(int)$id]); if (!$b) fail(404, 'Brief tidak ditemukan');
         $n = (int)(json_body()['n'] ?? 3);
         $bo = brief_out($b);
+        $t0 = microtime(true);
         $res = ai_generate_content($u, $bo, $n);
         $now = now_iso();
+        q('UPDATE briefs SET gen_ms = ? WHERE id = ?', [(int)((microtime(true) - $t0) * 1000), $b['id']]);
         foreach ($res['variants'] as $v) {
             insert('brief_variants', ['brief_id' => $b['id'], 'angle' => mb_substr((string)($v['angle'] ?? ''), 0, 120), 'title' => mb_substr((string)($v['title'] ?? ''), 0, 300),
                 'body' => (string)($v['body'] ?? ''), 'hashtags' => jenc(array_slice(array_map('strval', (array)($v['hashtags'] ?? [])), 0, 10)), 'ai_mode' => $res['mode'], 'created_at' => $now]);
@@ -405,7 +413,8 @@ function register_routes_m47(Router $r): void
         if (count($codes) > 5) fail(422, 'Maksimal 5 provinsi per permintaan');
         $out = [];
         foreach ($codes as $c) {
-            $res = ai_localize($u, $d['title'], $d['body'], PROVINCES[$c][0]);
+            $ctx = array_map(fn($x) => "[{$x['category']}] {$x['content']} (sumber: {$x['source']})", all('SELECT * FROM local_context WHERE province_code = ? AND verified = 1 ORDER BY category', [$c]));
+            $res = ai_localize($u, $d['title'], $d['body'], PROVINCES[$c][0], $ctx);
             $now = now_iso(); $t = mb_substr(trim((string)$res['title']), 0, 300) ?: $d['title']; $bd = trim((string)$res['body']);
             $did = insert('drafts', ['kind' => $d['kind'], 'format' => $d['format'], 'title' => $t, 'body' => $bd, 'province_code' => $c, 'issue_id' => $d['issue_id'], 'ai_generated' => 1,
                 'status' => 'draf', 'version' => 1, 'content_hash' => draft_hash($t, $bd), 'created_by' => $u['id'], 'created_at' => $now, 'updated_at' => $now,
@@ -419,7 +428,7 @@ function register_routes_m47(Router $r): void
     $r->add('POST', '/api/m4/drafts/(\d+)/editorial', function ($id) {
         $u = require_roles(...AUTHOR_OR_EDITOR);
         $d = get_draft_row((int)$id);
-        $facts = $d['brief_id'] ? jdec(val('SELECT facts FROM briefs WHERE id = ?', [$d['brief_id']])) : [];
+        $facts = array_map(fn($f) => $f['text'] . ($f['source'] ? " (sumber: {$f['source']})" : ''), draft_facts($d));
         $res = ai_editorial_check($u, $d['title'], $d['body'], $facts);
         q('UPDATE drafts SET editorial_score = ?, editorial_json = ? WHERE id = ?', [(int)$res['score'], jenc($res), $d['id']]);
         audit_record($u, 'naskah.cek_editorial_ai', 'draft', $d['id'], ['score' => (int)$res['score'], 'temuan' => count($res['findings'] ?? []), 'mode' => $res['mode']]);
@@ -449,6 +458,7 @@ function register_routes_m47(Router $r): void
         if (array_key_exists('due_at', $b)) { $set['due_at'] = opt_dt($b['due_at']); $ch['due_at'] = $set['due_at']; }
         if (isset($b['priority'])) { if (!in_array($b['priority'], ['tinggi', 'normal', 'rendah'], true)) fail(422, 'Prioritas tidak dikenal'); $set['priority'] = $b['priority']; $ch['priority'] = $b['priority']; }
         foreach ($set as $k => $v) q("UPDATE drafts SET $k = ? WHERE id = ?", [$v, $d['id']]);
+        if (!empty($set['assignee_id'])) notify([(int)$set['assignee_id']], 'penugasan', "Anda ditugaskan: {$d['title']}" . (!empty($set['due_at']) ? ' (tenggat ' . substr($set['due_at'], 0, 16) . ' UTC)' : ''), '/editorial?id=' . $d['id'], (int)$u['id']);
         audit_record($u, 'naskah.penugasan', 'draft', $d['id'], $ch);
         send_json(board_card(get_draft_row((int)$id)));
     });
@@ -461,6 +471,7 @@ function register_routes_m47(Router $r): void
         $u = current_user(); $d = get_draft_row((int)$id);
         $body = trim(str_field(json_body(), 'body', 1, 4000));
         $cid = insert('draft_comments', ['draft_id' => $d['id'], 'user_id' => $u['id'], 'body' => $body, 'at' => now_iso()]);
+        notify([(int)$d['created_by'], (int)($d['assignee_id'] ?? 0)], 'diskusi', "{$u['full_name']} menulis catatan pada \"{$d['title']}\"", '/editorial?id=' . $d['id'], (int)$u['id']);
         audit_record($u, 'naskah.diskusi', 'draft', $d['id'], ['comment_id' => $cid]);
         send_json(['id' => $cid, 'user_name' => $u['full_name'], 'body' => $body, 'at' => now_iso()], 201);
     });
@@ -496,9 +507,11 @@ function register_routes_m47(Router $r): void
         $made = [];
         foreach ($acc as $aid) {
             if (!one('SELECT id FROM social_accounts WHERE id = ? AND active = 1', [$aid])) fail(422, "Akun #$aid tidak ditemukan");
+            check_quota($aid, $planned, $u, !empty($b['override_quota']));
             $tid = insert('post_tasks', ['draft_id' => $d['id'], 'account_id' => $aid, 'planned_at' => $planned, 'caption' => $caption ?: $d['title'], 'status' => 'menunggu',
                 'assignee_id' => ($b['assignee_id'] ?? null) ? (int)$b['assignee_id'] : (val('SELECT pic_user_id FROM social_accounts WHERE id = ?', [$aid]) ?: null), 'created_by' => $u['id'], 'created_at' => now_iso()]);
             $made[] = task_out(one('SELECT * FROM post_tasks WHERE id = ?', [$tid]));
+            notify([(int)val('SELECT assignee_id FROM post_tasks WHERE id = ?', [$tid])], 'tugas_unggah', "Tugas unggah baru: {$d['title']}", '/kanal-resmi?tab=tugas', (int)$u['id']);
         }
         audit_record($u, 'medsos.tugas_unggah', 'draft', $d['id'], ['akun' => $acc, 'planned_at' => $planned]);
         send_json($made, 201);
@@ -665,14 +678,7 @@ function register_routes_m47(Router $r): void
     $r->add('POST', '/api/m7/health-check', function () {
         $u = require_roles('operator', 'admin');
         // Simulasi uji ketersediaan dari 5 titik pantau (MVP: belum terhubung CMS sungguhan).
-        $now = now_iso(); $res = ['normal' => 0, 'lambat' => 0, 'gangguan' => 0];
-        foreach (all("SELECT * FROM channels WHERE type IN ('nasional','provinsi')") as $c) {
-            $roll = mt_rand(1, 100);
-            $h = $c['health'] === 'gangguan' ? ($roll <= 50 ? 'normal' : 'gangguan') : ($roll <= 4 ? 'lambat' : ($roll <= 5 ? 'gangguan' : 'normal'));
-            $lat = $h === 'normal' ? mt_rand(120, 450) : ($h === 'lambat' ? mt_rand(900, 2500) : 0);
-            q('UPDATE channels SET health = ?, latency_ms = ?, checked_at = ? WHERE id = ?', [$h, $lat, $now, $c['id']]);
-            $res[$h]++;
-        }
+        $res = run_uptime_checks();
         audit_record($u, 'distribusi.uji_ketersediaan', 'channel', '-', $res);
         send_json($res);
     });
