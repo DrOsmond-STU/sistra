@@ -176,7 +176,7 @@ function register_routes_kak_m7(Router $r): void
     $r->add('GET', '/api/m7/media-partners', function () {
         current_user();
         send_json(array_map(fn($m) => ['id' => (int)$m['id'], 'name' => $m['name'], 'type' => $m['type'], 'province_name' => province_name($m['province_code']) ?? 'Nasional', 'contact' => $m['contact'],
-            'active' => (bool)$m['active'], 'downloads' => (int)val('SELECT COUNT(*) FROM press_downloads WHERE partner_id = ?', [$m['id']])], all('SELECT * FROM media_partners ORDER BY type, name')));
+            'active' => (bool)$m['active'], 'downloads' => (int)val('SELECT COUNT(*) FROM press_downloads WHERE partner_id = ?', [$m['id']])], all('SELECT * FROM media_partners WHERE active = 1 ORDER BY type, name LIMIT 200')));
     });
     $r->add('POST', '/api/m7/media-partners', function () {
         $u = require_roles('operator', 'redaktur');
@@ -192,7 +192,7 @@ function register_routes_kak_m7(Router $r): void
         send_json(array_map(fn($p) => ['id' => (int)$p['id'], 'draft_id' => (int)$p['draft_id'], 'title' => $p['title'], 'note' => $p['note'], 'expires_at' => $p['expires_at'],
             'assets' => count(jdec($p['asset_ids'])), 'links' => (int)val('SELECT COUNT(*) FROM press_links WHERE pack_id = ?', [$p['id']]),
             'downloads' => array_map(fn($x) => ['partner' => val('SELECT name FROM media_partners WHERE id = ?', [$x['partner_id']]), 'ip' => $x['ip'], 'at' => $x['at']],
-                all('SELECT * FROM press_downloads WHERE pack_id = ? ORDER BY at DESC LIMIT 50', [$p['id']])), 'created_at' => $p['created_at']], all('SELECT * FROM press_packs ORDER BY id DESC')));
+                all('SELECT * FROM press_downloads WHERE pack_id = ? ORDER BY at DESC LIMIT 50', [$p['id']])), 'created_at' => $p['created_at']], all('SELECT * FROM press_packs ORDER BY id DESC LIMIT 40')));
     });
     $r->add('POST', '/api/m7/press-packs', function () {
         $u = require_roles('operator', 'redaktur');
@@ -242,7 +242,7 @@ function register_routes_kak_m7(Router $r): void
         send_json(['filename' => 'paket-media-' . $p['id'] . '.txt', 'content' => $text]);
     });
     // ---------- S54 gerbang API eksternal ----------
-    $r->add('GET', '/api/m7/api-clients', function () { require_roles('admin'); send_json(array_map('api_client_out', all('SELECT * FROM api_clients ORDER BY id DESC'))); });
+    $r->add('GET', '/api/m7/api-clients', function () { require_roles('admin'); send_json(array_map('api_client_out', all('SELECT * FROM api_clients ORDER BY active DESC, id DESC LIMIT 60'))); });
     $r->add('POST', '/api/m7/api-clients', function () {
         $u = require_roles('admin');
         $b = json_body();
@@ -319,7 +319,7 @@ function register_routes_kak_m8(Router $r): void
         usort($issues, fn($a, $b) => $b['score'] <=> $a['score']);
         $camps = array_map(fn($c) => ['id' => (int)$c['id'], 'name' => $c['name'], 'status' => $c['status'], 'start_date' => $c['start_date'], 'end_date' => $c['end_date'],
             'shift' => sentiment_shift($c['issue_id'] ? (int)$c['issue_id'] : null, $c['start_date'] . 'T00:00:00Z', $c['end_date'] . 'T23:59:59Z')],
-            all("SELECT * FROM campaigns WHERE status IN ('berjalan','selesai','disetujui') ORDER BY start_date DESC"));
+            all("SELECT * FROM campaigns WHERE status IN ('berjalan','selesai','disetujui') ORDER BY start_date DESC LIMIT 25"));
         send_json(['weights' => IEKP_WEIGHTS, 'method' => 'IEKP = 25% jangkauan (target 500 rb) + 20% keterlibatan (ER 5% = 100) + 25% sentimen (1 − rasio negatif 7 hari) + 15% kecepatan respons (≤ 2 jam = 100, −15/jam) + 15% cakupan wilayah (kanal/39).',
             'national' => $issues ? (int)round(array_sum(array_column($issues, 'score')) / count($issues)) : 0, 'issues' => $issues, 'campaigns' => $camps]);
     });

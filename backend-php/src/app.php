@@ -22,6 +22,8 @@ require __DIR__ . '/kak_routes.php';
 require __DIR__ . '/kak_routes_m6.php';
 require __DIR__ . '/kak_routes_m78.php';
 require __DIR__ . '/seed_kak.php';
+require __DIR__ . '/crud.php';
+require __DIR__ . '/seed_bulk.php';
 
 /** Migrasi M4–M7 sekali per basis data (penanda di data_dir). Data contoh hanya ditanam pada basis data demo. */
 function ensure_m47(): void
@@ -53,6 +55,20 @@ function ensure_kak(): void
     } finally { flock($lock, LOCK_UN); fclose($lock); }
 }
 
+/** Data demo massal (≥ 500 per fitur) ditanam bertahap ±8 dtk per permintaan sampai selesai (penanda .bulk-v1). */
+function ensure_bulk(): void
+{
+    $mark = data_dir() . '/.bulk-v1';
+    if (is_file($mark) || getenv('SISTRA_SEED_DEMO') === '0') return;
+    $lock = fopen(data_dir() . '/.bulk.lock', 'c');
+    if (!flock($lock, LOCK_EX | LOCK_NB)) { fclose($lock); return; } // permintaan lain sedang menanam
+    try {
+        if (is_file($mark)) return;
+        if ((int)val('SELECT COUNT(*) FROM social_accounts') === 0) { touch($mark); return; } // bukan basis data demo
+        if (seed_bulk(8.0)) touch($mark);
+    } finally { flock($lock, LOCK_UN); fclose($lock); }
+}
+
 function ini_bytes(string $v): int
 {
     $v = trim($v); $n = (int)$v;
@@ -78,12 +94,14 @@ function sistra_handle(): void
         }
         ensure_m47();
         ensure_kak();
+        ensure_bulk();
         $len = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
         if ($len > ini_bytes((string)ini_get('post_max_size'))) fail(413, 'Permintaan melebihi batas ukuran unggah server');
         $router = new Router();
         register_routes($router);
         register_routes_m47($router);
         register_routes_kak($router);
+        register_routes_crud($router);
         $pdo = db();
         $writes = $method !== 'GET' || preg_match('#^/api/(documents/\d+(/versions/\d+/download)?|audit/verify|reports(/\d+/docx)?|m7/queue|m7/channels/[A-Z0-9-]+|public/v1/.*)$#', $path);
         if ($writes) tx_begin();

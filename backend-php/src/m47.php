@@ -70,17 +70,20 @@ function detect_bot_swarm(): int
     // Teks identik (dinormalisasi) dari ≥3 akun berbeda dalam 10 menit → tandai.
     $rows = all("SELECT id, author, text, at FROM social_comments WHERE at >= ? ORDER BY at", [iso_from_ts(microtime(true) - 14 * 86400)]);
     $groups = [];
-    foreach ($rows as $r) $groups[preg_replace('/\W+/u', '', mb_strtolower($r['text']))][] = $r;
-    $n = 0;
+    foreach ($rows as $r) { $r['ts'] = (float)ts_from_iso($r['at']); $groups[preg_replace('/\W+/u', '', mb_strtolower($r['text']))][] = $r; }
+    $flag = [];
     foreach ($groups as $g) {
         if (count($g) < 3) continue;
+        // jendela geser 10 menit atas data yang sudah urut waktu
+        $j = 0;
         for ($i = 0; $i < count($g); $i++) {
-            $win = array_filter($g, fn($x) => abs(ts_from_iso($x['at']) - ts_from_iso($g[$i]['at'])) <= 600);
-            if (count(array_unique(array_column($win, 'author'))) >= 3) {
-                foreach ($win as $w) { q('UPDATE social_comments SET bot_flag = 1 WHERE id = ? AND bot_flag = 0', [$w['id']]); $n++; }
-            }
+            while ($g[$i]['ts'] - $g[$j]['ts'] > 600) $j++;
+            $win = array_slice($g, $j, $i - $j + 1);
+            if (count(array_unique(array_column($win, 'author'))) >= 3) foreach ($win as $w) $flag[(int)$w['id']] = true;
         }
     }
+    $n = 0;
+    foreach (array_keys($flag) as $id) $n += q('UPDATE social_comments SET bot_flag = 1 WHERE id = ? AND bot_flag = 0', [$id])->rowCount();
     return $n;
 }
 
@@ -267,7 +270,7 @@ function analytics_overview(int $days): array
     $sent = $pairs('SELECT COALESCE(sentiment, "belum") k, COUNT(*) n FROM social_comments WHERE at >= ? GROUP BY k', [$since]);
     $cstatus = $pairs('SELECT status k, COUNT(*) n FROM social_comments WHERE at >= ? GROUP BY status', [$since]);
     $accounts = [];
-    foreach (all('SELECT * FROM social_accounts WHERE active = 1 ORDER BY followers DESC') as $a) {
+    foreach (all('SELECT * FROM social_accounts WHERE active = 1 ORDER BY followers DESC LIMIT 40') as $a) {
         $t = one("SELECT COUNT(*) n, COALESCE(SUM(reach),0) r, COALESCE(SUM(engagement),0) e FROM post_tasks WHERE account_id = ? AND status = 'diunggah' AND posted_at >= ?", [$a['id'], $since]);
         $cm = one("SELECT COUNT(*) n, SUM(status='dibalas') rep FROM social_comments WHERE account_id = ? AND at >= ?", [$a['id'], $since]);
         $accounts[] = ['handle' => $a['handle'], 'platform' => PLATFORMS[$a['platform']] ?? $a['platform'], 'followers' => (int)$a['followers'], 'posts' => (int)$t['n'],
@@ -606,7 +609,7 @@ function register_routes_m47(Router $r): void
         audit_record($u, 'medsos.status_komentar', 'social_comment', $c['id'], ['status' => $st]);
         send_json(comment_out(one('SELECT * FROM social_comments WHERE id = ?', [$c['id']])));
     });
-    $r->add('GET', '/api/m6/kb', function () { current_user(); send_json(array_map('kb_out', all('SELECT * FROM kb_responses ORDER BY updated_at DESC'))); });
+    $r->add('GET', '/api/m6/kb', function () { current_user(); send_json(array_map('kb_out', all('SELECT * FROM kb_responses ORDER BY updated_at DESC LIMIT 120'))); });
     $r->add('POST', '/api/m6/kb', function () {
         $u = require_roles('redaktur', 'pimpinan', 'analis');
         $b = json_body();

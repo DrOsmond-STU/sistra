@@ -8,12 +8,13 @@ $cmd = $argv[1] ?? '';
 $opts = [];
 foreach (array_slice($argv, 2) as $a) {
     if ($a === '--demo') $opts['demo'] = true;
+    elseif ($a === '--bulk') $opts['bulk'] = true;
     elseif (str_starts_with($a, '--password=')) $opts['password'] = substr($a, 11);
 }
 if ($cmd === 'verify') { echo json_encode(audit_verify()), "\n"; exit(0); }
 if ($cmd !== 'reset') { fwrite(STDERR, "Penggunaan: sistra-cli.php reset [--demo] [--password=SANDI]\n"); exit(2); }
 $dir = data_dir();
-foreach (['sistra.db', 'sistra.db-wal', 'sistra.db-shm', '.seeded', '.m47-v1', '.kak-v1', 'kredensial.txt'] as $f) @unlink("$dir/$f");
+foreach (['sistra.db', 'sistra.db-wal', 'sistra.db-shm', '.seeded', '.m47-v1', '.kak-v1', '.bulk-v1', '.bulk-progress', 'kredensial.txt'] as $f) @unlink("$dir/$f");
 if (is_dir("$dir/blobs")) exec('rm -rf ' . escapeshellarg("$dir/blobs"));
 $pw = $opts['password'] ?? null;
 if ($pw === null) { fwrite(STDERR, "--password wajib untuk reset uji\n"); exit(2); }
@@ -26,5 +27,8 @@ migrate_m47();
 if (isset($opts['demo'])) tx(fn() => seed_m47());
 migrate_kak();
 if (isset($opts['demo'])) tx(fn() => seed_kak());
+migrate_bulk();
+if (isset($opts['demo']) && isset($opts['bulk'])) { seed_bulk(1e9); touch("$dir/.bulk-v1"); }
+elseif (isset($opts['demo'])) touch("$dir/.bulk-v1"); // uji cepat: tanpa data massal kecuali --bulk
 touch("$dir/.seeded");
 echo "ok\n";

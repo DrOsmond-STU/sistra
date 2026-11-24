@@ -122,7 +122,7 @@ function register_routes_kak_m6(Router $r): void
     });
 
     // ---------- S42 kemitraan KOL terbuka ----------
-    $r->add('GET', '/api/m6/partners', function () { current_user(); send_json(array_map('partner_out', all('SELECT * FROM partners ORDER BY status, followers DESC'))); });
+    $r->add('GET', '/api/m6/partners', function () { current_user(); send_json(array_map('partner_out', all('SELECT * FROM partners ORDER BY status, followers DESC LIMIT 150'))); });
     $r->add('GET', '/api/m6/partners/(\d+)', function ($id) {
         current_user();
         $p = one('SELECT * FROM partners WHERE id = ?', [(int)$id]); if (!$p) fail(404, 'Mitra tidak ditemukan');
@@ -159,7 +159,12 @@ function register_routes_kak_m6(Router $r): void
     });
 
     // ---------- S44/S48 kampanye resmi ----------
-    $r->add('GET', '/api/m6/campaigns', function () { current_user(); send_json(array_map(fn($c) => campaign_out($c) + ['monitoring' => campaign_metrics($c)], all('SELECT * FROM campaigns ORDER BY start_date DESC'))); });
+    $r->add('GET', '/api/m6/campaigns', function () {
+        current_user();
+        // kampanye aktif & terbaru (arsip lengkap tersedia di Data & CRUD)
+        $rows = all("SELECT * FROM campaigns ORDER BY CASE status WHEN 'berjalan' THEN 0 WHEN 'diajukan' THEN 1 WHEN 'disetujui' THEN 2 WHEN 'draf' THEN 3 ELSE 4 END, start_date DESC LIMIT 24");
+        send_json(array_map(fn($c) => campaign_out($c) + ['monitoring' => campaign_metrics($c)], $rows));
+    });
     $r->add('GET', '/api/m6/campaigns/(\d+)', function ($id) {
         current_user();
         $c = one('SELECT * FROM campaigns WHERE id = ?', [(int)$id]); if (!$c) fail(404, 'Kampanye tidak ditemukan');

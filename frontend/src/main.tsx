@@ -13,6 +13,7 @@ import ReportsPage from "./pages/Reports";
 import StudioPage from "./pages/Studio";
 import AnalyticsPage from "./pages/Analytics";
 import DistributionPage from "./pages/Distribution";
+import DataCrudPage from "./pages/DataCrud";
 import DraftsPage from "./pages/Drafts";
 import EditorialPage from "./pages/Editorial";
 import ExecDashboard from "./pages/ExecDashboard";
@@ -20,7 +21,12 @@ import ProductionPage from "./pages/Production";
 import SocialPage from "./pages/Social";
 import LoginPage from "./pages/Login";
 import UsersPage from "./pages/Users";
+import "@fontsource/open-sans/latin-300.css";
+import "@fontsource/open-sans/latin-400.css";
+import "@fontsource/open-sans/latin-600.css";
+import "@fontsource/open-sans/latin-700.css";
 import "./styles.css";
+import "./theme/soft-ui.css";
 
 function Guarded() {
   const { user, loading } = useAuth();
@@ -41,6 +47,8 @@ function Guarded() {
         <Route path="aset" element={<AssetsPage />} />
         <Route path="laporan" element={<ReportsPage />} />
         <Route path="kak" element={<KakMatrix />} />
+        <Route path="data" element={<DataCrudPage />} />
+        <Route path="data/:entity" element={<DataCrudPage />} />
         <Route path="kanal-resmi" element={<SocialPage />} />
         <Route path="distribusi" element={<DistributionPage />} />
         <Route path="naskah" element={<DraftsPage />} />

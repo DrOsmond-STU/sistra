@@ -15,6 +15,8 @@ Port backend FastAPI (`../backend`) ke PHP 8.3 + SQLite untuk hosting cPanel yan
 | `src/m47.php` | M4 Produksi Narasi, M5 Editorial & Persetujuan, M6 Kanal Medsos Resmi (manual), M7 Distribusi 39 Kanal, dashboard eksekutif & analitik |
 | `src/seed_m47.php` | data demo sintetis M4–M7 bertema isu aktual (pangan, MBG, banjir, judol, hoaks bansos, Nataru, PDP, dll.) |
 | `src/kak.php`, `src/kak_routes*.php`, `src/ai_kak.php`, `src/seed_kak.php` | kelengkapan katalog KAK S26–S65: fakta bersumber & verifikasi klaim, konteks lokal 38 provinsi, studio multimedia, kalender terpadu, notifikasi, bank aset & templat, liputan, paket respons cepat, mitra KOL, kampanye, kuota, masking PII, CMS kanal, jadwal jam puncak, OG/Schema.org, portal media, gerbang API mitra, uptime 5 titik, metrik per jam, IEKP, uji sentimen, mutu AI, laporan berkala DOCX |
+| `src/crud.php` | mesin CRUD generik 27 entitas M4–M8 (`/api/crud/*`): validasi per tipe, hak akses per peran, aturan bisnis (naskah disetujui terkunci, kampanye bertanda tangan terkunci, transisi status distribusi, templat berversi), cari/saring/urut/halaman, ekspor CSV aman, jejak audit |
+| `src/seed_bulk.php` | data demo massal ≥ 500 baris per fitur; diisi bertahap ±8 detik per permintaan agar aman di hosting bersama (`.bulk-progress`) |
 | `vendor-meta/` | berkas autoload hasil `composer dump-autoload`, disalin pemasang ke `vendor/` paling akhir |
 | `public/api.php`, `public/router-dev.php` | front controller dan router untuk `php -S` |
 | `bin/sistra-cli.php` | `reset` / `verify` untuk pengembangan dan uji (bukan untuk produksi) |
@@ -39,4 +41,4 @@ Suite uji backend Python disalin ke `tests/` dan dijalankan lewat HTTP terhadap 
 SISTRA_DATA_DIR=/tmp/sistra-php PYTHONPATH=../backend ../backend/.venv/bin/python -m pytest tests
 ```
 
-Hasil saat ini: 75 lulus (termasuk `tests/test_m47.py` dan `tests/test_kak.py` untuk katalog KAK S26–S65). Pemasangan di hosting: lihat `deploy/README.md` bagian C.
+Hasil saat ini: 125 lulus, termasuk `tests/test_m47.py`, `tests/test_kak.py` (katalog KAK S26–S65), `tests/test_crud.py` (siklus tambah–lihat–cari–ubah–hapus–CSV untuk 28 entitas, aturan bisnis, hak akses, validasi) dan `tests/test_bulk.py` (≥ 500 baris per fitur, CRUD dan 16 halaman tetap < 3 detik pada data besar; memakai `sistra-cli.php reset --demo --bulk`). Pemasangan di hosting: lihat `deploy/README.md` bagian C.

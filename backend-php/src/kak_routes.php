@@ -270,11 +270,16 @@ function register_routes_kak(Router $r): void
         if ($qq = trim((string)qparam('q', ''))) { $w[] = '(title LIKE ? ESCAPE \'\\\' OR tags LIKE ? ESCAPE \'\\\' OR ai_tags LIKE ? ESCAPE \'\\\' OR description LIKE ? ESCAPE \'\\\' OR credit LIKE ? ESCAPE \'\\\')'; array_push($p, ...array_fill(0, 5, like_escape($qq))); }
         if ($k = qparam('kind')) { $w[] = 'kind = ?'; $p[] = $k; }
         if ($l = qparam('license')) { $w[] = 'license = ?'; $p[] = $l; }
-        $rows = array_map('asset_out', all('SELECT * FROM assets WHERE ' . implode(' AND ', $w) . ' ORDER BY id DESC LIMIT 300', $p));
-        if ($st = qparam('state')) $rows = array_values(array_filter($rows, fn($a) => $a['license_state'] === $st));
-        $all = array_map('asset_out', all('SELECT * FROM assets'));
-        send_json(['items' => $rows, 'stats' => ['total' => count($all), 'expiring' => count(array_filter($all, fn($a) => $a['license_state'] === 'segera_kedaluwarsa')),
-            'expired' => count(array_filter($all, fn($a) => $a['license_state'] === 'kedaluwarsa')), 'bytes' => array_sum(array_column($all, 'size'))], 'licenses' => ASSET_LICENSES]);
+        if ($st = qparam('state')) {
+            $now = now_iso(); $soon = iso_from_ts(microtime(true) + 30 * 86400);
+            if ($st === 'kedaluwarsa') { $w[] = 'license_expires_at IS NOT NULL AND license_expires_at < ?'; $p[] = $now; }
+            elseif ($st === 'segera_kedaluwarsa') { $w[] = 'license_expires_at >= ? AND license_expires_at < ?'; array_push($p, $now, $soon); }
+            elseif ($st === 'aktif') { $w[] = '(license_expires_at IS NULL OR license_expires_at >= ?)'; $p[] = $soon; }
+        }
+        $rows = array_map('asset_out', all('SELECT * FROM assets WHERE ' . implode(' AND ', $w) . ' ORDER BY id DESC LIMIT 120', $p));
+        $now = now_iso(); $soon = iso_from_ts(microtime(true) + 30 * 86400);
+        $st = one('SELECT COUNT(*) n, COALESCE(SUM(size),0) b, SUM(license_expires_at IS NOT NULL AND license_expires_at < ?) ex, SUM(license_expires_at >= ? AND license_expires_at < ?) soon FROM assets', [$now, $now, $soon]);
+        send_json(['items' => $rows, 'stats' => ['total' => (int)$st['n'], 'expiring' => (int)$st['soon'], 'expired' => (int)$st['ex'], 'bytes' => (int)$st['b']], 'licenses' => ASSET_LICENSES]);
     });
     $r->add('POST', '/api/m5/assets', function () {
         $u = require_roles('redaktur', 'produser', 'analis', 'operator', 'pimpinan');

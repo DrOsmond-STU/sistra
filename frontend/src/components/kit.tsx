@@ -3,12 +3,19 @@ import { fmtShortDate, nf } from "../format";
 import type { EditorialResult, Pair } from "../types47";
 import { useWidth } from "./ui";
 
-export function Tile({ label, value, foot, tone }: { label: string; value: ReactNode; foot?: ReactNode; tone?: "warn" | "bad" | "good" }) {
+const TONE_ICON: Record<string, [string, string]> = { good: ["ni-check-bold", "good"], warn: ["ni-time-alarm", "warn"], bad: ["ni-notification-70", "bad"] };
+
+/** Ubin KPI gaya Soft UI: label, nilai, catatan kaki, dan ikon dalam kotak gradien. */
+export function Tile({ label, value, foot, tone, icon }: { label: string; value: ReactNode; foot?: ReactNode; tone?: "warn" | "bad" | "good"; icon?: string }) {
+  const [ic, cls] = tone ? TONE_ICON[tone] : [icon ?? "ni-chart-bar-32", ""];
   return (
     <div className={`card tile${tone ? ` tone-${tone}` : ""}`}>
-      <div className="label">{label}</div>
-      <div className="value num">{value}</div>
-      {foot && <div className="foot">{foot}</div>}
+      <div className="tile-body">
+        <div className="label">{label}</div>
+        <div className="value num">{value}</div>
+        {foot && <div className="foot">{foot}</div>}
+      </div>
+      <span className={`tile-icon ${cls}`} aria-hidden><i className={`ni ${icon ?? ic}`} /></span>
     </div>
   );
 }
