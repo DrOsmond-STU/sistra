@@ -25,6 +25,7 @@ require __DIR__ . '/seed_kak.php';
 require __DIR__ . '/crud.php';
 require __DIR__ . '/seed_bulk.php';
 require __DIR__ . '/geo.php';
+require __DIR__ . '/pw_reset.php';
 
 /** Migrasi M4–M7 sekali per basis data (penanda di data_dir). Data contoh hanya ditanam pada basis data demo. */
 function ensure_m47(): void
@@ -111,6 +112,7 @@ function sistra_handle(): void
         ensure_kak();
         ensure_bulk();
         ensure_geo();
+        ensure_password_reset();
         $len = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
         if ($len > ini_bytes((string)ini_get('post_max_size'))) fail(413, 'Permintaan melebihi batas ukuran unggah server');
         $router = new Router();

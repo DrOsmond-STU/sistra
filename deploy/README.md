@@ -106,3 +106,11 @@ Catatan:
 4. Permintaan pertama menjalankan migrasi M4–M7 dan katalog KAK S26–S65 beserta data demo sintetis secara otomatis (penanda `~/sistra-data/.m47-v1` dan `.kak-v1`).
 5. Masuk sebagai admin → **Pengaturan AI** → *Pasang pustaka Claude* (server mengunduh Anthropic PHP SDK pada commit yang dikunci), lalu isi kunci API. Kunci disimpan di `~/sistra-data/ai.json` (0600) dan tidak pernah dikirim balik ke peramban. Tanpa kunci, AI berjalan dalam mode simulasi.
 6. Hapus klon sementara bila tidak dipakai lagi.
+
+### C.2 Lupa kata sandi akun bawaan (tanpa shell)
+
+1. cPanel → File Manager → folder `~/sistra-data/` → buat berkas kosong bernama `RESET-KATA-SANDI`.
+2. Buka situs SISTRA sekali (halaman apa saja). Server membuat kata sandi acak baru untuk semua akun bawaan, menulisnya ke `~/sistra-data/kredensial.txt` (izin 0600), mengakhiri semua sesi lama, mencatat `auth.reset_sandi_server` di jejak audit, lalu menghapus berkas pemicu.
+3. Buka `kredensial.txt` di File Manager, simpan kata sandinya di tempat aman, lalu hapus berkas tersebut.
+
+Hanya berkas biasa yang diproses (tautan simbolik diabaikan). Akun yang dibuat admin lewat menu **Pengguna** tidak ikut diatur ulang.

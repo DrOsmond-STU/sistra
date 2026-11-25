@@ -106,3 +106,40 @@ def test_deleted_row_is_detected(db_base, client, login):
         result = audit.verify_chain(db)
     assert result.ok is False
     assert result.first_broken_seq == 3
+
+
+def test_server_side_password_reset(db_demo, client, login):
+    """Pemicu RESET-KATA-SANDI di folder data: kata sandi acak baru ke kredensial.txt (0600), sesi lama berakhir."""
+    import stat
+    from conftest import DATA, PASSWORD
+    old = login("admin")
+    assert client.get("/api/auth/me", headers=old).status_code == 200
+    cred = DATA / "kredensial.txt"
+    cred.unlink(missing_ok=True)
+    trig = DATA / "RESET-KATA-SANDI"
+    trig.write_text("")
+    import time
+    time.sleep(1.1)  # token lama terbit sebelum detik reset
+    assert client.get("/api/health").status_code == 200
+    assert not trig.exists()
+    assert stat.S_IMODE(cred.stat().st_mode) == 0o600
+    rows = dict(line.split("\t") for line in cred.read_text().splitlines() if line and not line.startswith("#"))
+    assert {"admin", "pimpinan", "redaktur", "produser", "analis", "operator", "auditor"} <= set(rows)
+    assert len(set(rows.values())) == len(rows) and all(len(p) >= 16 for p in rows.values())
+    # sesi lama berakhir; sandi lama ditolak; sandi baru diterima
+    assert client.get("/api/auth/me", headers=old).status_code == 401
+    assert client.post("/api/auth/login", json={"username": "admin", "password": PASSWORD}).status_code == 401
+    r = client.post("/api/auth/login", json={"username": "admin", "password": rows["admin"].strip()})
+    assert r.status_code == 200
+    h = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    assert client.get("/api/auth/me", headers=h).status_code == 200
+    ev = client.get("/api/audit", headers=h, params={"action": "auth.reset_sandi_server"})
+    # admin mungkin tidak berhak membaca audit; cukup pastikan auditor dapat melihatnya
+    ra = client.post("/api/auth/login", json={"username": "auditor", "password": rows["auditor"].strip()}).json()
+    au = client.get("/api/audit", headers={"Authorization": f"Bearer {ra['access_token']}"}, params={"limit": 50})
+    assert au.status_code == 200 and "auth.reset_sandi_server" in au.text
+    # pemicu berupa tautan simbolik diabaikan dan dihapus
+    trig.symlink_to(cred)
+    before = cred.read_text()
+    assert client.get("/api/health").status_code == 200
+    assert not trig.is_symlink() and cred.read_text() == before

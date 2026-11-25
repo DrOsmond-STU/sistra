@@ -255,6 +255,7 @@ function current_user(): array
     if ($p === null) throw new HttpError(401, 'Token tidak valid atau kedaluwarsa');
     $row = one('SELECT * FROM users WHERE id = ?', [(int)$p['sub']]);
     if ($row === null || !$row['active']) throw new HttpError(401, 'Pengguna tidak aktif');
+    if (function_exists('token_before_reset') && token_before_reset($row, $p)) throw new HttpError(401, 'Sesi berakhir karena kata sandi telah diatur ulang; silakan masuk kembali');
     return $u = $row;
 }
 function require_roles(string ...$roles): array
