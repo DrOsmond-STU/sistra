@@ -71,7 +71,7 @@ function ensure_geo(): void
     } finally { flock($lock, LOCK_UN); fclose($lock); }
 }
 
-/** Data demo massal (≥ 500 per fitur) ditanam bertahap ±8 dtk per permintaan sampai selesai (penanda .bulk-v1). */
+/** Data demo massal (≥ 500 per fitur) ditanam bertahap ±3 dtk per permintaan baca sampai selesai (penanda .bulk-v1). */
 function ensure_bulk(): void
 {
     $mark = data_dir() . '/.bulk-v1';
@@ -81,7 +81,7 @@ function ensure_bulk(): void
     try {
         if (is_file($mark)) return;
         if ((int)val('SELECT COUNT(*) FROM social_accounts') === 0) { touch($mark); return; } // bukan basis data demo
-        if (seed_bulk(8.0)) touch($mark);
+        if (seed_bulk(3.0)) touch($mark);
     } finally { flock($lock, LOCK_UN); fclose($lock); }
 }
 
@@ -108,11 +108,13 @@ function sistra_handle(): void
             auto_seed(getenv('SISTRA_SEED_DEMO') !== '0');
             touch(data_dir() . '/.seeded');
         }
+        ensure_password_reset(); // ringan; harus berlaku sebelum permintaan masuk diproses
         ensure_m47();
         ensure_kak();
-        ensure_bulk();
+        // Penanaman data demo massal hanya pada permintaan baca di luar proses masuk, dengan anggaran waktu kecil,
+        // agar tidak pernah menahan login.
+        if ($method === 'GET' && !str_starts_with($path, '/api/auth/')) ensure_bulk();
         ensure_geo();
-        ensure_password_reset();
         $len = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
         if ($len > ini_bytes((string)ini_get('post_max_size'))) fail(413, 'Permintaan melebihi batas ukuran unggah server');
         $router = new Router();
@@ -138,6 +140,10 @@ function sistra_handle(): void
         if (ob_get_level()) ob_end_clean();
         if ($pdo) tx_end(false);
         error_log('SISTRA: ' . get_class($e) . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+        // salinan ringkas di folder data (log hosting bisa berada di tempat lain); dibatasi ±256 KB
+        $log = data_dir() . '/error.log';
+        if (!is_file($log) || filesize($log) < 262144)
+            @file_put_contents($log, gmdate('c') . " $method $path " . get_class($e) . ': ' . mb_substr($e->getMessage(), 0, 300) . ' @ ' . basename($e->getFile()) . ':' . $e->getLine() . "\n", FILE_APPEND);
         send_json(['detail' => 'Kesalahan internal server'], 500);
     }
 }
