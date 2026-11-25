@@ -24,9 +24,9 @@ tx(function () use ($pw, $opts) {
     if (isset($opts['demo'])) seed_demo($users);
 });
 migrate_m47();
-if (isset($opts['demo'])) tx(fn() => seed_m47());
+if (isset($opts['demo'])) ai_off(fn() => tx(fn() => seed_m47()));
 migrate_kak();
-if (isset($opts['demo'])) tx(fn() => seed_kak());
+if (isset($opts['demo'])) ai_off(fn() => tx(fn() => seed_kak()));
 migrate_bulk();
 if (isset($opts['demo']) && isset($opts['bulk'])) { seed_bulk(1e9); touch("$dir/.bulk-v1"); }
 elseif (isset($opts['demo'])) touch("$dir/.bulk-v1"); // uji cepat: tanpa data massal kecuali --bulk

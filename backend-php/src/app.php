@@ -37,7 +37,7 @@ function ensure_m47(): void
     try {
         if (is_file($mark)) return;
         migrate_m47();
-        if (getenv('SISTRA_SEED_DEMO') !== '0' && (int)val('SELECT COUNT(*) FROM sources') > 0) tx(fn() => seed_m47());
+        if (getenv('SISTRA_SEED_DEMO') !== '0' && (int)val('SELECT COUNT(*) FROM sources') > 0) ai_off(fn() => tx(fn() => seed_m47()));
         touch($mark);
     } finally { flock($lock, LOCK_UN); fclose($lock); }
 }
@@ -52,7 +52,7 @@ function ensure_kak(): void
     try {
         if (is_file($mark)) return;
         migrate_kak();
-        if (getenv('SISTRA_SEED_DEMO') !== '0' && (int)val('SELECT COUNT(*) FROM social_accounts') > 0) tx(fn() => seed_kak());
+        if (getenv('SISTRA_SEED_DEMO') !== '0' && (int)val('SELECT COUNT(*) FROM social_accounts') > 0) ai_off(fn() => tx(fn() => seed_kak()));
         touch($mark);
     } finally { flock($lock, LOCK_UN); fclose($lock); }
 }

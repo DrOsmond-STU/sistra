@@ -42,7 +42,8 @@ function ai_save_config(array $patch): void
     chmod($tmp, 0600);
     rename($tmp, ai_config_path());
 }
-function ai_live(): bool { $c = ai_config(); return $c['enabled'] && $c['api_key'] !== '' && ai_lib_ready(); }
+/** Penanaman data demo memaksa mode simulasi agar tidak pernah memanggil (dan menagih) API Claude. */
+function ai_live(): bool { if (!empty($GLOBALS['SISTRA_AI_OFF'])) return false; $c = ai_config(); return $c['enabled'] && $c['api_key'] !== '' && ai_lib_ready(); }
 function ai_status(): array
 {
     $c = ai_config();
@@ -295,4 +296,12 @@ function sim_chat(string $q, string $context): string
 {
     return "[MODE SIMULASI] Asisten belum terhubung ke Claude karena kunci API belum diisi (menu Pengaturan AI, peran admin).\n\n"
         . "Ringkasan data saat ini yang bisa membantu menjawab \"" . mb_substr($q, 0, 120) . "\":\n" . $context;
+}
+
+/** Jalankan $fn dengan AI dipaksa simulasi (untuk penanaman data contoh). */
+function ai_off(callable $fn)
+{
+    $prev = $GLOBALS['SISTRA_AI_OFF'] ?? false;
+    $GLOBALS['SISTRA_AI_OFF'] = true;
+    try { return $fn(); } finally { $GLOBALS['SISTRA_AI_OFF'] = $prev; }
 }

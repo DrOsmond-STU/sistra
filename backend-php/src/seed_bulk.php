@@ -429,6 +429,12 @@ function bulk_step(string $s): void
 /** Jalankan langkah yang belum selesai dalam batas waktu; kembalikan true bila semua selesai. */
 function seed_bulk(float $budget = 8.0): bool
 {
+    $GLOBALS['SISTRA_AI_OFF'] = true; // data contoh: selalu simulasi, tanpa panggilan API Claude
+    try { return seed_bulk_run($budget); } finally { $GLOBALS['SISTRA_AI_OFF'] = false; }
+}
+
+function seed_bulk_run(float $budget): bool
+{
     migrate_bulk();
     $mark = data_dir() . '/.bulk-progress';
     $done = is_file($mark) ? array_filter(explode("\n", (string)file_get_contents($mark))) : [];
