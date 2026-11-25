@@ -110,7 +110,7 @@ Catatan:
 ### C.2 Lupa kata sandi akun bawaan (tanpa shell)
 
 1. cPanel → File Manager → folder `~/sistra-data/` → buat berkas kosong bernama `RESET-KATA-SANDI`.
-2. Buka situs SISTRA sekali (halaman apa saja). Server membuat kata sandi acak baru untuk semua akun bawaan, menulisnya ke `~/sistra-data/kredensial.txt` (izin 0600), mengakhiri semua sesi lama, mencatat `auth.reset_sandi_server` di jejak audit, lalu menghapus berkas pemicu.
+2. Buka `https://sistra.<domain>/api/health` sekali (atau coba masuk dari halaman login). Halaman login saja belum memanggil server PHP. Server membuat kata sandi acak baru untuk semua akun bawaan, menulisnya ke `~/sistra-data/kredensial.txt` (izin 0600), mengakhiri semua sesi lama, mencatat `auth.reset_sandi_server` di jejak audit, lalu menghapus berkas pemicu.
 3. Buka `kredensial.txt` di File Manager, simpan kata sandinya di tempat aman, lalu hapus berkas tersebut.
 
 Kirim lewat email (praktis dari HP): isi berkas pemicu dengan satu alamat email. Server mengirim kata sandi baru ke alamat itu memakai `mail()` hosting; alamat tidak disimpan di kode maupun basis data, dan jejak audit hanya mencatat alamat tersamar. Periksa folder Spam bila email tidak tampak.
