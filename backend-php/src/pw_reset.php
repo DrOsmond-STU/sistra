@@ -12,16 +12,18 @@ declare(strict_types=1);
  */
 const PW_RESET_TRIGGER = 'RESET-KATA-SANDI';
 
-function ensure_password_reset(): void
+/** @return array{reset:bool,email:?bool,accounts:int} */
+function ensure_password_reset(): array
 {
     $trig = data_dir() . '/' . PW_RESET_TRIGGER;
     clearstatcache(true, $trig);
-    if (!is_link($trig) && !file_exists($trig)) return;
+    $none = ['reset' => false, 'email' => null, 'accounts' => 0];
+    if (!is_link($trig) && !file_exists($trig)) return $none;
     $lock = fopen(data_dir() . '/.seed.lock', 'c');
     flock($lock, LOCK_EX);
     try {
         clearstatcache(true, $trig);
-        if (is_link($trig) || !is_file($trig)) { if (is_link($trig)) @unlink($trig); return; } // hanya berkas biasa
+        if (is_link($trig) || !is_file($trig)) { if (is_link($trig)) @unlink($trig); return $none; } // hanya berkas biasa
         $to = trim((string)@file_get_contents($trig, false, null, 0, 320));
         $to = filter_var($to, FILTER_VALIDATE_EMAIL) ? $to : null;
         $names = array_column(SEED_USERS, 0);
@@ -51,6 +53,7 @@ function ensure_password_reset(): void
         if ($to !== null) tx(fn() => audit_record(null, 'auth.reset_sandi_email', 'user', 'akun-bawaan',
             ['terkirim' => $sent, 'tujuan' => preg_replace('/^(.).*(@.*)$/', '$1***$2', $to)], 'server'));
         @unlink($trig);
+        return ['reset' => true, 'email' => $to !== null ? $sent : null, 'accounts' => count($pw)];
     } finally {
         flock($lock, LOCK_UN);
         fclose($lock);
