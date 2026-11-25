@@ -112,3 +112,26 @@ def test_multimedia_demo_complete(db_bulk, client, login):
     hit = client.get("/api/m4/media", headers=h, params={"q": f"#{one['draft_id']}"}).json()
     assert hit and all(x["draft_id"] == one["draft_id"] for x in hit) and {x["kind"] for x in hit} >= {"infografis", "video", "podcast"}
     assert client.get("/api/m4/media", headers=h, params={"limit": 999}).status_code == 422
+
+
+def test_bank_aset_real_photos(db_bulk, client, login):
+    """Bank aset berisi foto asli berlisensi terbuka lengkap dengan atribusi dan tautan sumber."""
+    import json, pathlib
+    mf = pathlib.Path(__file__).resolve().parents[1] / "demo-assets" / "manifest.json"
+    if not mf.exists():
+        pytest.skip("demo-assets/manifest.json belum dibundel")
+    man = json.loads(mf.read_text())
+    assert len(man) >= 40
+    h = login("produser")
+    r = client.get("/api/m5/assets", headers=h, params={"media": "foto"}).json()
+    photos = [a for a in r["items"] if "wikimedia" in a["tags"]]
+    assert len(photos) >= min(len(man), 100)
+    for a in photos[:20]:
+        assert a["mime"] == "image/jpeg" and a["kind"] == "gambar"
+        assert "Wikimedia Commons" in a["credit"] and a["license"] in {"cc_by", "cc_by_sa", "domain_publik"}
+        assert "commons.wikimedia.org" in a["description"]
+    f = client.get(f"/api/m5/assets/{photos[0]['id']}/file", headers=h)
+    assert f.status_code == 200 and f.headers["content-type"] == "image/jpeg" and f.content[:3] == b"\xff\xd8\xff"
+    svg = client.get("/api/m5/assets", headers=h, params={"media": "grafis"}).json()["items"]
+    assert svg and all(a["mime"] == "image/svg+xml" for a in svg)
+    assert len({a["province_code"] for a in photos if a["province_code"]}) >= 20

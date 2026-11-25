@@ -281,6 +281,9 @@ function register_routes_kak(Router $r): void
         if ($qq = trim((string)qparam('q', ''))) { $w[] = '(title LIKE ? ESCAPE \'\\\' OR tags LIKE ? ESCAPE \'\\\' OR ai_tags LIKE ? ESCAPE \'\\\' OR description LIKE ? ESCAPE \'\\\' OR credit LIKE ? ESCAPE \'\\\')'; array_push($p, ...array_fill(0, 5, like_escape($qq))); }
         if ($k = qparam('kind')) { $w[] = 'kind = ?'; $p[] = $k; }
         if ($l = qparam('license')) { $w[] = 'license = ?'; $p[] = $l; }
+        $media = qparam('media');
+        if ($media === 'foto') $w[] = "mime IN ('image/jpeg','image/png','image/webp')";
+        elseif ($media === 'grafis') $w[] = "mime = 'image/svg+xml'";
         if ($st = qparam('state')) {
             $now = now_iso(); $soon = iso_from_ts(microtime(true) + 30 * 86400);
             if ($st === 'kedaluwarsa') { $w[] = 'license_expires_at IS NOT NULL AND license_expires_at < ?'; $p[] = $now; }

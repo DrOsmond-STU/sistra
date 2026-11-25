@@ -74,7 +74,7 @@ SQL);
 
 // ======================= konstanta =======================
 const LC_CATEGORIES = ['ibu_kota' => 'Ibu kota & pusat layanan', 'bahasa' => 'Bahasa & sapaan', 'layanan' => 'Layanan publik', 'istilah' => 'Istilah lokal', 'budaya' => 'Budaya & kearifan lokal', 'tokoh' => 'Tokoh/lembaga rujukan'];
-const ASSET_LICENSES = ['milik_sendiri' => 'Milik institusi', 'cc_by' => 'CC BY 4.0', 'berlisensi' => 'Berlisensi (berbatas waktu)', 'editorial' => 'Hanya editorial', 'mitra' => 'Dari mitra (izin tertulis)'];
+const ASSET_LICENSES = ['milik_sendiri' => 'Milik institusi', 'cc_by' => 'CC BY (wajib atribusi)', 'cc_by_sa' => 'CC BY-SA (atribusi, berbagi serupa)', 'domain_publik' => 'Domain publik / CC0', 'berlisensi' => 'Berlisensi (berbatas waktu)', 'editorial' => 'Hanya editorial', 'mitra' => 'Dari mitra (izin tertulis)'];
 const RENDITION_PROFILES = [
     'og-1200x630' => ['Kartu OpenGraph/Facebook', 'image/jpeg', '1200×630'], 'x-1600x900' => ['X/Twitter 16:9', 'image/jpeg', '1600×900'],
     'ig-1080x1350' => ['Instagram feed 4:5', 'image/jpeg', '1080×1350'], 'ig-story-1080x1920' => ['Story/Reels 9:16', 'image/jpeg', '1080×1920'],

@@ -30,8 +30,8 @@ function AssetThumb({ a }: { a: Asset }) {
 function Bank() {
   const { hasRole } = useAuth();
   const [params] = useSearchParams();
-  const [q, setQ] = useState(""); const [state, setState] = useState(""); const [lic, setLic] = useState("");
-  const data = useLoad(() => api<AssetResp>("/m5/assets", { query: { q, state, license: lic } }), [q, state, lic]);
+  const [q, setQ] = useState(""); const [state, setState] = useState(""); const [lic, setLic] = useState(""); const [media, setMedia] = useState("");
+  const data = useLoad(() => api<AssetResp>("/m5/assets", { query: { q, state, license: lic, media } }), [q, state, lic, media]);
   const drafts = useLoad(() => api<Draft[]>("/drafts"), []);
   const [linkTo, setLinkTo] = useState<number>(Number(params.get("draft")) || 0);
   const [show, setShow] = useState(false);
@@ -64,6 +64,7 @@ function Bank() {
       <div className="row between">
         <div className="row">
           <input placeholder="Cari judul, tag, tag SISTRA AGENT, kredit…" value={q} onChange={(e) => setQ(e.target.value)} style={{ minWidth: 260 }} aria-label="Cari aset" />
+          <select value={media} onChange={(e) => setMedia(e.target.value)} aria-label="Jenis berkas"><option value="">Semua jenis berkas</option><option value="foto">Foto</option><option value="grafis">Grafis (SVG)</option></select>
           <select value={state} onChange={(e) => setState(e.target.value)} aria-label="Status lisensi"><option value="">Semua status</option><option value="aktif">Aktif</option><option value="segera_kedaluwarsa">Segera kedaluwarsa</option><option value="kedaluwarsa">Kedaluwarsa</option></select>
           <select value={lic} onChange={(e) => setLic(e.target.value)} aria-label="Jenis lisensi"><option value="">Semua lisensi</option>{Object.entries(data.data?.licenses ?? {}).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
         </div>
@@ -89,6 +90,7 @@ function Bank() {
             <div className="tags">{[...a.tags, ...a.ai_tags.map((t) => `✦${t}`)].slice(0, 7).map((t) => <span key={t}>{t}</span>)}</div>
             <div className="small"><span className={STATE[a.license_state][1]}>{a.license_label} · {STATE[a.license_state][0]}</span>{a.license_expires_at && <span className="muted"> · s.d. {fmtDate(a.license_expires_at)}</span>}</div>
             <div className="small muted">{a.credit} · {fmtSize(a.size)} · dipakai {a.used_in}×</div>
+            {(() => { const m = a.description.match(/Sumber: (https:\/\/commons\.wikimedia\.org\/\S+)/); return m ? <a className="small" href={m[1]} target="_blank" rel="noreferrer">Sumber & lisensi ↗</a> : null; })()}
             {linkTo > 0 && <button className="sm" disabled={a.license_state === "kedaluwarsa"} onClick={() => link(a)}>Tautkan ke #{linkTo}</button>}
           </div>
         ))}
