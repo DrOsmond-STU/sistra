@@ -156,3 +156,27 @@ def test_password_reset_with_email_trigger(db_demo, client, login):
     tok = client.post("/api/auth/login", json={"username": "auditor", "password": rows["auditor"].strip()}).json()["access_token"]
     au = client.get("/api/audit", headers={"Authorization": f"Bearer {tok}"}, params={"limit": 50}).text
     assert "auth.reset_sandi_email" in au and "p***@example.com" in au and "penerima.uji" not in au
+
+
+def test_reset_with_bcrypt_hash_and_change_own_password(db_demo, client, login):
+    """Pemicu berisi hash bcrypt: server hanya menerima hash; kata sandi baru berlaku pada permintaan masuk pertama."""
+    import subprocess
+    from conftest import DATA
+    new = "Uji-Hash-Sandi-2026"
+    h = subprocess.run(["php", "-r", f"echo password_hash('{new}', PASSWORD_BCRYPT);"], capture_output=True, text=True, check=True).stdout
+    (DATA / "RESET-KATA-SANDI").write_text(f"admin:{h}\nbukan-akun:{h}\n")
+    # permintaan masuk itu sendiri menerapkan hash lalu memverifikasi kata sandi
+    r = client.post("/api/auth/login", json={"username": "admin", "password": new})
+    assert r.status_code == 200, r.text
+    assert not (DATA / "RESET-KATA-SANDI").exists()
+    assert "hash kata sandi baru diterapkan untuk 1 akun" in (DATA / "reset-status.txt").read_text()
+    hd = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    # ganti kata sandi sendiri
+    assert client.post("/api/auth/password", headers=hd, json={"current_password": "salah", "new_password": "Sandi-Baru-Sekali-1"}).status_code == 403
+    assert client.post("/api/auth/password", headers=hd, json={"current_password": new, "new_password": "pendek"}).status_code == 422
+    import time
+    time.sleep(1.1)
+    assert client.post("/api/auth/password", headers=hd, json={"current_password": new, "new_password": "Sandi-Baru-Sekali-1"}).status_code == 200
+    assert client.get("/api/auth/me", headers=hd).status_code == 401  # sesi lama berakhir
+    assert client.post("/api/auth/login", json={"username": "admin", "password": new}).status_code == 401
+    assert client.post("/api/auth/login", json={"username": "admin", "password": "Sandi-Baru-Sekali-1"}).status_code == 200

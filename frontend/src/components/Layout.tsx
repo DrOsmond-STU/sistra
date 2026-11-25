@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth";
 import { ROLE_LABEL } from "../format";
 import AiAssistant from "./AiAssistant";
+import ChangePassword from "./ChangePassword";
 import NotificationBell from "./NotificationBell";
 import { ClassChip } from "./ui";
 
@@ -50,6 +51,7 @@ export default function Layout() {
   const { user, logout, hasRole } = useAuth();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
   const [, toggleTheme] = useTheme();
   const loc = useLocation();
 
@@ -107,6 +109,7 @@ export default function Layout() {
             <ClassChip code={user.clearance} label={user.clearance_label} />
             <NotificationBell />
             <button className="ghost icon-btn" onClick={toggleTheme} aria-label="Ganti tema terang/gelap" title="Tema terang/gelap"><i className="ni ni-settings-gear-65" /></button>
+            <button className="ghost icon-btn" onClick={() => setPwOpen(true)} title="Ganti kata sandi" aria-label="Ganti kata sandi"><i className="ni ni-key-25" /></button>
             <button className="ghost icon-btn" onClick={logout} title="Keluar" aria-label="Keluar"><i className="ni ni-button-power" /><span className="hide-sm"> Keluar</span></button>
           </div>
         </header>
@@ -115,6 +118,7 @@ export default function Layout() {
         </main>
         <footer className="foot-note">© 2026 SISTRA · Tema berbasis <a href="/theme/LICENSE-soft-ui-dashboard.txt" target="_blank" rel="noreferrer">Soft UI Dashboard Tailwind</a> (Creative Tim, MIT) · Data contoh sintetis</footer>
         <AiAssistant />
+        {pwOpen && <ChangePassword onClose={() => setPwOpen(false)} />}
       </div>
     </div>
   );

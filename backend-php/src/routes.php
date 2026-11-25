@@ -212,6 +212,18 @@ function register_routes(Router $r): void
         send_json(['access_token' => $tok, 'token_type' => 'bearer', 'user' => user_out($u)]);
     });
     $r->add('GET', '/api/auth/me', fn() => send_json(user_out(current_user())));
+    $r->add('POST', '/api/auth/password', function () {
+        $u = current_user();
+        $b = json_body();
+        $cur = (string)($b['current_password'] ?? ''); $new = (string)($b['new_password'] ?? '');
+        if (!password_verify($cur, $u['password_hash'])) { audit_record($u, 'auth.ganti_sandi_gagal', 'user', $u['id']); commit_then_fail(403, 'Kata sandi saat ini salah'); }
+        if (mb_strlen($new) < 10 || mb_strlen($new) > 200) fail(422, 'Kata sandi baru minimal 10 karakter');
+        if (hash_equals($cur, $new)) fail(422, 'Kata sandi baru harus berbeda dari yang lama');
+        if (function_exists('add_col')) add_col('users', 'pw_reset_at', 'TEXT');
+        q('UPDATE users SET password_hash = ?, pw_reset_at = ? WHERE id = ?', [password_hash($new, PASSWORD_DEFAULT), now_iso(), $u['id']]);
+        audit_record($u, 'auth.ganti_sandi', 'user', $u['id']);
+        send_json(['ok' => true, 'detail' => 'Kata sandi diganti. Silakan masuk kembali.']);
+    });
     $r->add('GET', '/api/units', function () { current_user(); send_json(array_map('unit_out', all('SELECT * FROM units ORDER BY code'))); });
     $r->add('GET', '/api/users', function () { require_roles('admin'); send_json(array_map('user_out', all('SELECT * FROM users ORDER BY username'))); });
     $r->add('POST', '/api/users', function () {

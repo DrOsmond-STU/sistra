@@ -24,7 +24,23 @@ function ensure_password_reset(): array
     try {
         clearstatcache(true, $trig);
         if (is_link($trig) || !is_file($trig)) { if (is_link($trig)) @unlink($trig); return $none; } // hanya berkas biasa
-        $to = trim((string)@file_get_contents($trig, false, null, 0, 320));
+        $raw = (string)@file_get_contents($trig, false, null, 0, 8192);
+        // Mode hash: baris "nama:$2y$..." — server hanya menerima hash bcrypt, bukan kata sandi.
+        if (preg_match_all('/^([a-z0-9._-]{2,64}):(\$2y\$1[0-4]\$[.\/A-Za-z0-9]{53})\s*$/m', $raw, $mm, PREG_SET_ORDER)) {
+            $done = [];
+            tx(function () use ($mm, &$done) {
+                add_col('users', 'pw_reset_at', 'TEXT');
+                $now = now_iso();
+                foreach ($mm as [, $un, $hash]) {
+                    if (q('UPDATE users SET password_hash = ?, pw_reset_at = ? WHERE username = ?', [$hash, $now, $un])->rowCount()) $done[] = $un;
+                }
+                audit_record(null, 'auth.reset_sandi_server', 'user', 'akun-bawaan', ['akun' => $done, 'mode' => 'hash'], 'server');
+            });
+            @unlink($trig);
+            @file_put_contents(data_dir() . '/reset-status.txt', gmdate('Y-m-d H:i:s') . ' UTC: hash kata sandi baru diterapkan untuk ' . count($done) . " akun\n", FILE_APPEND);
+            return ['reset' => true, 'email' => null, 'accounts' => count($done)];
+        }
+        $to = trim($raw);
         $to = filter_var($to, FILTER_VALIDATE_EMAIL) ? $to : null;
         $names = array_column(SEED_USERS, 0);
         $pw = [];
