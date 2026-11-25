@@ -90,7 +90,7 @@ export default function DraftTools({ draft, onChanged }: { draft: DraftWithEdito
         ) : <div className="small muted">Memuat verifikasi…</div>
       )}
 
-      {tab === "pratinjau" && <PlatformPreview title={draft.title} body={draft.body} hashtags={tags} aiLabel={draft.ai_generated ? draft.ai_label ?? "Konten ini disusun dengan bantuan SISTRA AGENT (sistem kecerdasan buatan) dan telah ditinjau oleh redaksi." : null} />}
+      {tab === "pratinjau" && <PlatformPreview title={draft.title} body={draft.body} hashtags={tags} aiLabel={draft.ai_generated ? draft.ai_label ?? "Konten ini disusun dengan bantuan SISTRA AGENT dan telah ditinjau oleh redaksi." : null} />}
 
       {tab === "editorial" && (
         <div className="stack" style={{ gap: 8 }}>

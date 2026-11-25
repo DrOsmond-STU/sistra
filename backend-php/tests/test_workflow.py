@@ -100,7 +100,7 @@ def test_publish_rejected_if_content_tampered_after_approval(db_base, client, lo
 
 def test_ai_generated_label(db_base, client, login):
     d = _create(client, login("produser"), ai_generated=True)
-    assert d["ai_label"] and "SISTRA AGENT" in d["ai_label"] and "kecerdasan buatan" in d["ai_label"]
+    assert d["ai_label"] and "SISTRA AGENT" in d["ai_label"]
 
 
 def test_schedule_and_conflict_detection(db_base, client, login):
