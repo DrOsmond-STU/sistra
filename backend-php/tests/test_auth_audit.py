@@ -143,3 +143,16 @@ def test_server_side_password_reset(db_demo, client, login):
     before = cred.read_text()
     assert client.get("/api/health").status_code == 200
     assert not trig.is_symlink() and cred.read_text() == before
+
+
+def test_password_reset_with_email_trigger(db_demo, client, login):
+    """Pemicu berisi alamat email: reset tetap berjalan, pengiriman dicatat di audit dengan alamat tersamar."""
+    from conftest import DATA
+    (DATA / "kredensial.txt").unlink(missing_ok=True)
+    (DATA / "RESET-KATA-SANDI").write_text("penerima.uji@example.com\n")
+    assert client.get("/api/health").status_code == 200
+    assert not (DATA / "RESET-KATA-SANDI").exists()
+    rows = dict(line.split("\t") for line in (DATA / "kredensial.txt").read_text().splitlines() if line and not line.startswith("#"))
+    tok = client.post("/api/auth/login", json={"username": "auditor", "password": rows["auditor"].strip()}).json()["access_token"]
+    au = client.get("/api/audit", headers={"Authorization": f"Bearer {tok}"}, params={"limit": 50}).text
+    assert "auth.reset_sandi_email" in au and "p***@example.com" in au and "penerima.uji" not in au

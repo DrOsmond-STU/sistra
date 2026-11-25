@@ -113,4 +113,6 @@ Catatan:
 2. Buka situs SISTRA sekali (halaman apa saja). Server membuat kata sandi acak baru untuk semua akun bawaan, menulisnya ke `~/sistra-data/kredensial.txt` (izin 0600), mengakhiri semua sesi lama, mencatat `auth.reset_sandi_server` di jejak audit, lalu menghapus berkas pemicu.
 3. Buka `kredensial.txt` di File Manager, simpan kata sandinya di tempat aman, lalu hapus berkas tersebut.
 
+Kirim lewat email (praktis dari HP): isi berkas pemicu dengan satu alamat email. Server mengirim kata sandi baru ke alamat itu memakai `mail()` hosting; alamat tidak disimpan di kode maupun basis data, dan jejak audit hanya mencatat alamat tersamar. Periksa folder Spam bila email tidak tampak.
+
 Hanya berkas biasa yang diproses (tautan simbolik diabaikan). Akun yang dibuat admin lewat menu **Pengguna** tidak ikut diatur ulang.
