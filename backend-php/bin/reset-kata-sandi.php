@@ -9,8 +9,4 @@ if (!defined('SISTRA_DATA_DIR')) define('SISTRA_DATA_DIR', getenv('SISTRA_DATA_D
 // root dokumen dipakai untuk nama domain pengirim email
 $_SERVER['DOCUMENT_ROOT'] = getenv('SISTRA_DOCROOT') ?: ($home . '/sistra.semestateknologiutama.com');
 require dirname(__DIR__) . '/src/app.php';
-$r = ensure_password_reset();
-if (!$r['reset']) exit(0);
-$line = gmdate('Y-m-d H:i:s') . " UTC: kata sandi diatur ulang untuk {$r['accounts']} akun; email "
-    . ($r['email'] === null ? 'tidak diminta' : ($r['email'] ? 'diterima server email hosting' : 'GAGAL dikirim')) . "\n";
-file_put_contents(SISTRA_DATA_DIR . '/reset-status.txt', $line, FILE_APPEND);
+ensure_password_reset(); // status ringkas ditulis oleh fungsi ini

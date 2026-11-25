@@ -53,6 +53,9 @@ function ensure_password_reset(): array
         if ($to !== null) tx(fn() => audit_record(null, 'auth.reset_sandi_email', 'user', 'akun-bawaan',
             ['terkirim' => $sent, 'tujuan' => preg_replace('/^(.).*(@.*)$/', '$1***$2', $to)], 'server'));
         @unlink($trig);
+        // Catatan ringkas tanpa kata sandi, untuk memastikan reset & pengiriman email dari luar aplikasi.
+        @file_put_contents(data_dir() . '/reset-status.txt', gmdate('Y-m-d H:i:s') . ' UTC: kata sandi diatur ulang untuk ' . count($pw) . ' akun; email '
+            . ($to === null ? 'tidak diminta' : ($sent ? 'diterima server email hosting' : 'GAGAL dikirim')) . "\n", FILE_APPEND);
         return ['reset' => true, 'email' => $to !== null ? $sent : null, 'accounts' => count($pw)];
     } finally {
         flock($lock, LOCK_UN);
