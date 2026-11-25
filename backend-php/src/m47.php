@@ -312,7 +312,7 @@ function register_routes_m47(Router $r): void
     });
     $r->add('POST', '/api/ai/test', function () {
         $u = require_roles('admin');
-        if (!ai_live()) fail(422, 'Kunci API belum diisi atau AI dinonaktifkan');
+        if (!ai_live()) fail(422, 'Kunci API belum diisi atau SISTRA AGENT dinonaktifkan');
         $res = ai_call($u, 'uji', 'Tugas: uji koneksi.', [['role' => 'user', 'content' => 'Balas dengan satu kata: SIAP']], null, 'low', 200);
         send_json(['ok' => true, 'model' => $res['model'], 'reply' => trim($res['text'])]);
     });

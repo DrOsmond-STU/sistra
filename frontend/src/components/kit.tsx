@@ -23,7 +23,7 @@ export function Tile({ label, value, foot, tone, icon }: { label: string; value:
 export function ModeChip({ mode }: { mode?: string | null }) {
   if (!mode) return null;
   return mode === "claude"
-    ? <span className="chip ai-live" title="Diproses oleh Claude">✦ AI Claude</span>
+    ? <span className="chip ai-live" title="Diproses oleh SISTRA AGENT">✦ SISTRA AGENT</span>
     : <span className="chip ai-sim" title="Kunci API belum diisi; hasil berbasis aturan sederhana">◇ Mode simulasi</span>;
 }
 

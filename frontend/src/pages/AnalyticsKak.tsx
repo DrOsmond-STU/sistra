@@ -117,7 +117,7 @@ export function ImpactTab() {
   );
 }
 
-// ------------------------------------------------------------ S64 penjamin mutu AI
+// ------------------------------------------------------------ S64 penjamin mutu SISTRA AGENT
 interface Quality { features: { feature: string; calls: number; live: number; error_rate: number; avg_ms: number }[]; feedback: { category: string; total: number; accepted: number; precision: number }[];
   outcomes: Record<"ai" | "human", { drafts: number; approved: number; returned: number; avg_score: number | null }>;
   bias: { group: string; provinces: number; drafts: number; avg_score: number | null; context_verified: number; context_per_province: number }[]; bias_flag: string | null; model: string; mode: string }
@@ -127,11 +127,11 @@ export function QualityTab() {
   const row = (k: "ai" | "human", label: string) => { const o = d.outcomes[k]; return <tr><td>{label}</td><td className="num">{o.drafts}</td><td className="num">{o.approved}</td><td className="num">{o.returned}</td><td className="num">{o.drafts ? Math.round((o.approved / o.drafts) * 100) : 0}%</td><td className="num">{o.avg_score ?? "-"}</td></tr>; };
   return (
     <div className="stack">
-      <Msg kind="info">Model aktif: <b>{d.model}</b> · mode {d.mode}. Laporan mutu bulanan otomatis disertakan pada Laporan Berkala (S61).</Msg>
+      <Msg kind="info">Mesin: <b>SISTRA AGENT</b> · {d.mode === "claude" ? "aktif" : "mode simulasi"}. Laporan mutu bulanan otomatis disertakan pada Laporan Berkala (S61).</Msg>
       {d.bias_flag && <Msg kind="warn"><b>Evaluasi bias:</b> {d.bias_flag}</Msg>}
       <div className="grid g2">
-        <div className="card table-wrap"><h2>Hasil naskah: dibantu AI vs manual (30 hari)</h2>
-          <table><thead><tr><th></th><th className="num">Naskah</th><th className="num">Disetujui</th><th className="num">Dikembalikan</th><th className="num">Lolos</th><th className="num">Skor rerata</th></tr></thead><tbody>{row("ai", "Dibantu AI")}{row("human", "Manual")}</tbody></table></div>
+        <div className="card table-wrap"><h2>Hasil naskah: dibantu SISTRA AGENT vs manual (30 hari)</h2>
+          <table><thead><tr><th></th><th className="num">Naskah</th><th className="num">Disetujui</th><th className="num">Dikembalikan</th><th className="num">Lolos</th><th className="num">Skor rerata</th></tr></thead><tbody>{row("ai", "Dibantu SISTRA AGENT")}{row("human", "Manual")}</tbody></table></div>
         <div className="card"><h2>Presisi temuan agen editorial (umpan balik redaktur)</h2>
           <BarList data={d.feedback.map((f) => ({ key: `${f.category} (${f.accepted}/${f.total})`, value: Math.round(f.precision * 100) }))} max={100} unit="%" /></div>
       </div>
@@ -139,8 +139,8 @@ export function QualityTab() {
         <table><thead><tr><th>Wilayah</th><th className="num">Provinsi</th><th className="num">Naskah lokal</th><th className="num">Skor editorial</th><th className="num">Konteks lokal terverifikasi / provinsi</th></tr></thead>
           <tbody>{d.bias.map((b) => <tr key={b.group}><td>{b.group}</td><td className="num">{b.provinces}</td><td className="num">{b.drafts}</td><td className="num">{b.avg_score ?? "-"}</td>
             <td className="num"><span className={b.context_per_province < 2 ? "status-bad" : ""}>{b.context_per_province}</span></td></tr>)}</tbody></table></div>
-      <div className="card table-wrap"><h2>Pemakaian & keandalan per fitur AI</h2>
-        <table><thead><tr><th>Fitur</th><th className="num">Panggilan</th><th className="num">Oleh Claude</th><th className="num">Tingkat galat</th><th className="num">Latensi</th></tr></thead>
+      <div className="card table-wrap"><h2>Pemakaian & keandalan per fitur SISTRA AGENT</h2>
+        <table><thead><tr><th>Fitur</th><th className="num">Panggilan</th><th className="num">Oleh SISTRA AGENT</th><th className="num">Tingkat galat</th><th className="num">Latensi</th></tr></thead>
           <tbody>{d.features.map((f) => <tr key={f.feature}><td>{AI_FEATURE_LABEL[f.feature] ?? f.feature}</td><td className="num">{f.calls}</td><td className="num">{f.live}</td><td className="num">{(f.error_rate * 100).toFixed(1)}%</td><td className="num">{f.avg_ms ? `${(f.avg_ms / 1000).toFixed(1)} dtk` : "-"}</td></tr>)}</tbody></table></div>
     </div>
   );

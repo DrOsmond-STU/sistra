@@ -57,7 +57,7 @@ export default function ExecDashboard() {
         </div>
         <div className="row">
           <button onClick={reload}>Muat ulang</button>
-          <button className="primary" onClick={askBrief} disabled={briefing}>{briefing ? "Menyusun…" : "✦ Ringkasan AI untuk pimpinan"}</button>
+          <button className="primary" onClick={askBrief} disabled={briefing}>{briefing ? "Menyusun…" : "✦ Ringkasan SISTRA AGENT untuk pimpinan"}</button>
         </div>
       </div>
 
@@ -66,7 +66,7 @@ export default function ExecDashboard() {
         <div className="card stack" style={{ gap: 8 }}>
           <div className="row between"><h2 style={{ margin: 0 }}>Ringkasan eksekutif</h2><ModeChip mode={brief.mode} /></div>
           <div style={{ whiteSpace: "pre-wrap" }}>{brief.text}</div>
-          <div className="small muted">Disusun AI dari data SISTRA. Verifikasi sebelum dijadikan dasar keputusan.</div>
+          <div className="small muted">Disusun SISTRA AGENT dari data SISTRA. Verifikasi sebelum dijadikan dasar keputusan.</div>
         </div>
       )}
 
@@ -85,7 +85,7 @@ export default function ExecDashboard() {
       )}
 
       <div className="grid g4">
-        <Tile label="Naskah disusun (30 hari)" value={nf.format(k.produced_30d)} foot={`${k.ai_assisted_pct}% dibantu AI`} />
+        <Tile label="Naskah disusun (30 hari)" value={nf.format(k.produced_30d)} foot={`${k.ai_assisted_pct}% dibantu SISTRA AGENT`} />
         <Tile label="Naskah tayang (30 hari)" value={nf.format(k.published_30d)} foot={`${nf.format(k.views_7d)} pembaca/jangkauan 7 hari`} tone="good" />
         <Tile label="Menunggu persetujuan" value={nf.format(k.awaiting_approval)} tone={k.awaiting_approval > 5 ? "warn" : undefined}
               foot={`rerata ${k.avg_approval_hours} jam ke persetujuan · ${k.approved_not_published} siap tayang`} />

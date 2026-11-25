@@ -62,7 +62,7 @@ function BriefForm({ meta, onCreated }: { meta: M4Meta; onCreated: (b: Brief) =>
         <label className="field"><span>Tujuan komunikasi</span><input value={f.objective} onChange={set("objective")} /></label>
         <label className="field"><span>Khalayak sasaran</span><input value={f.audience} onChange={set("audience")} /></label>
         <label className="field req full"><span>Pesan kunci</span><textarea style={{ minHeight: 70 }} value={f.key_messages} onChange={set("key_messages")} required minLength={5} /></label>
-        <div className="field full"><span>Fakta terverifikasi bersumber (S26) — AI hanya boleh memakai fakta ini dan menandai rujukan [F1], [F2], …</span>
+        <div className="field full"><span>Fakta terverifikasi bersumber (S26) — SISTRA AGENT hanya boleh memakai fakta ini dan menandai rujukan [F1], [F2], …</span>
           {f.facts.map((x, i) => (
             <div className="row" key={i} style={{ alignItems: "flex-start" }}>
               <span className="small mono" style={{ paddingTop: 8 }}>F{i + 1}</span>
@@ -146,8 +146,8 @@ export default function ProductionPage() {
     try {
       const r = await api<Brief>(`/m4/briefs/${sel!.id}/generate`, { method: "POST", body: { n } });
       setSel(r); briefs.reload();
-      setMsg(r.mode === "claude" ? { kind: "ok", text: `${n} variasi baru dihasilkan Claude. ${r.notes ?? ""}` }
-        : { kind: "warn", text: "Mode simulasi: variasi disusun dari templat. Isi kunci API di Pengaturan AI agar Claude yang menulis." });
+      setMsg(r.mode === "claude" ? { kind: "ok", text: `${n} variasi baru dihasilkan SISTRA AGENT. ${r.notes ?? ""}` }
+        : { kind: "warn", text: "Mode simulasi: variasi disusun dari templat. Isi kunci API di Pengaturan SISTRA AGENT agar SISTRA AGENT yang menulis." });
     } catch (e) { setMsg({ kind: "error", text: (e as Error).message }); }
   });
 
@@ -157,7 +157,7 @@ export default function ProductionPage() {
       <div className="row between">
         <div>
           <h1>Produksi Narasi <span className="muted" style={{ fontWeight: 400 }}>· M4</span></h1>
-          <p className="sub" style={{ marginBottom: 0 }}>Brief → AI menghasilkan variasi multi-format → pilih & sunting → naskah draf → cek editorial → pelokalan ke provinsi</p>
+          <p className="sub" style={{ marginBottom: 0 }}>Brief → SISTRA AGENT menghasilkan variasi multi-format → pilih & sunting → naskah draf → cek editorial → pelokalan ke provinsi</p>
         </div>
         <div className="row">
           {ai && <ModeChip mode={ai.mode} />}
@@ -169,7 +169,7 @@ export default function ProductionPage() {
         <button role="tab" aria-selected={params.get("tab") === "lokal"} className={params.get("tab") === "lokal" ? "on" : ""} onClick={() => setParams({ tab: "lokal" }, { replace: true })}>Basis konteks lokal 38 provinsi (S28)</button>
       </div>
       {params.get("tab") === "lokal" ? <><SebaranMap title="Sebaran naskah bermuatan lokal" layers={["naskah", "artikel"]} initial="naskah" days={90} height={360} /><LocalContext /></> : <>
-      {ai?.mode === "simulasi" && <Msg kind="warn">AI berjalan dalam <b>mode simulasi</b> (kunci API Claude belum diisi). Fitur tetap bisa dicoba; hasil berasal dari templat. {hasRole("admin") && <Link to="/pengaturan-ai">Isi kunci API →</Link>}</Msg>}
+      {ai?.mode === "simulasi" && <Msg kind="warn">SISTRA AGENT berjalan dalam <b>mode simulasi</b> (kunci API SISTRA AGENT belum diisi). Fitur tetap bisa dicoba; hasil berasal dari templat. {hasRole("admin") && <Link to="/pengaturan-agent">Isi kunci API →</Link>}</Msg>}
       {msg && <Msg kind={msg.kind}>{msg.text}</Msg>}
 
       <div className="split" style={{ gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.2fr)" }}>
@@ -190,8 +190,8 @@ export default function ProductionPage() {
         </div>
 
         <div className="stack">
-          {creating && meta.data && <BriefForm meta={meta.data} onCreated={(b) => { setCreating(false); setSel(b); briefs.reload(); setMsg({ kind: "ok", text: "Brief tersimpan. Klik “Hasilkan variasi” agar AI menyusun draf." }); }} />}
-          {!creating && !sel && <div className="card empty">Pilih brief di kiri, atau buat brief baru untuk mulai memproduksi konten dengan AI.</div>}
+          {creating && meta.data && <BriefForm meta={meta.data} onCreated={(b) => { setCreating(false); setSel(b); briefs.reload(); setMsg({ kind: "ok", text: "Brief tersimpan. Klik “Hasilkan variasi” agar SISTRA AGENT menyusun draf." }); }} />}
+          {!creating && !sel && <div className="card empty">Pilih brief di kiri, atau buat brief baru untuk mulai memproduksi konten dengan SISTRA AGENT.</div>}
           {sel && (
             <>
               <div className="card stack" style={{ gap: 10 }}>
@@ -207,7 +207,7 @@ export default function ProductionPage() {
                   <dt>Pesan kunci</dt><dd>{sel.key_messages}</dd>
                   <dt>Fakta bersumber</dt><dd>{(sel.fact_items ?? []).length ? <ol style={{ margin: 0, paddingLeft: 18 }}>{(sel.fact_items ?? []).map((x, i) => (
                     <li key={i}>{x.text}<div className="small muted">{x.source || <span className="status-bad">tanpa sumber</span>}{x.reliability ? ` · keandalan ${x.reliability}` : ""}{x.url && <> · <a href={x.url} target="_blank" rel="noreferrer noopener">tautan</a></>}</div></li>))}</ol>
-                    : <span className="muted">Tidak ada — AI akan menandai klaim dengan [DATA PERLU DIVERIFIKASI]</span>}</dd>
+                    : <span className="muted">Tidak ada — SISTRA AGENT akan menandai klaim dengan [DATA PERLU DIVERIFIKASI]</span>}</dd>
                   {sel.gen_ms != null && <><dt>Waktu pembuatan</dt><dd className={sel.gen_ms <= 15000 ? "status-ok" : "status-bad"}>{(sel.gen_ms / 1000).toFixed(1)} dtk {sel.gen_ms <= 15000 ? "(memenuhi target < 15 dtk)" : "(melebihi target 15 dtk)"}</dd></>}
                   <dt>Dibuat</dt><dd>{sel.author_name} · {fmtDateTime(sel.created_at)}</dd>
                 </dl>
@@ -216,7 +216,7 @@ export default function ProductionPage() {
                     <label className="row small">Jumlah variasi
                       <select value={n} onChange={(e) => setN(Number(e.target.value))}>{[2, 3, 4, 5].map((x) => <option key={x}>{x}</option>)}</select>
                     </label>
-                    <button className="primary" disabled={!!busy} onClick={generate}>{busy === "gen" ? "AI sedang menulis…" : "✦ Hasilkan variasi dengan AI"}</button>
+                    <button className="primary" disabled={!!busy} onClick={generate}>{busy === "gen" ? "SISTRA AGENT sedang menulis…" : "✦ Hasilkan variasi dengan SISTRA AGENT"}</button>
                   </div>
                 )}
               </div>
@@ -235,7 +235,7 @@ export default function ProductionPage() {
                   ))}
                 </div>
               )}
-              {sel.variants?.length === 0 && <div className="card empty">Belum ada variasi. Klik “Hasilkan variasi dengan AI”.</div>}
+              {sel.variants?.length === 0 && <div className="card empty">Belum ada variasi. Klik “Hasilkan variasi dengan SISTRA AGENT”.</div>}
             </>
           )}
         </div>

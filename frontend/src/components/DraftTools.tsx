@@ -28,7 +28,7 @@ interface AssetLite { id: number; title: string; license_label: string; license_
 const CLAIM_LABEL = { terverifikasi: "Terverifikasi", tidak_bersumber: "Tidak bersumber", perlu_verifikasi: "Ditandai perlu verifikasi" };
 type Tab = "verifikasi" | "pratinjau" | "editorial" | "judul" | "tulis" | "lokal" | "aset";
 
-/** Alat bantu AI untuk satu naskah (S27–S33, S37). */
+/** Alat bantu SISTRA AGENT untuk satu naskah (S27–S33, S37). */
 export default function DraftTools({ draft, onChanged }: { draft: DraftWithEditorial; onChanged: (d?: Draft) => void }) {
   const { user, hasRole } = useAuth();
   const [busy, run] = useBusy();
@@ -59,7 +59,7 @@ export default function DraftTools({ draft, onChanged }: { draft: DraftWithEdito
 
   return (
     <div className="stack" style={{ gap: 10 }}>
-      <h3 style={{ margin: 0 }}>✦ Ruang pratinjau & alat bantu AI</h3>
+      <h3 style={{ margin: 0 }}>✦ Ruang pratinjau & alat bantu SISTRA AGENT</h3>
       <div className="subtabs" role="tablist">
         {TABS.map(([k, v]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{v}</button>)}
       </div>
@@ -90,7 +90,7 @@ export default function DraftTools({ draft, onChanged }: { draft: DraftWithEdito
         ) : <div className="small muted">Memuat verifikasi…</div>
       )}
 
-      {tab === "pratinjau" && <PlatformPreview title={draft.title} body={draft.body} hashtags={tags} aiLabel={draft.ai_generated ? draft.ai_label ?? "Konten ini disusun dengan bantuan AI dan telah ditinjau oleh redaksi." : null} />}
+      {tab === "pratinjau" && <PlatformPreview title={draft.title} body={draft.body} hashtags={tags} aiLabel={draft.ai_generated ? draft.ai_label ?? "Konten ini disusun dengan bantuan SISTRA AGENT (sistem kecerdasan buatan) dan telah ditinjau oleh redaksi." : null} />}
 
       {tab === "editorial" && (
         <div className="stack" style={{ gap: 8 }}>

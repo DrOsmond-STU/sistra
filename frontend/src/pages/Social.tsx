@@ -52,7 +52,7 @@ function CommentCard({ c, canReply, canTriage, onChange }: { c: SocialComment; c
           <textarea style={{ minHeight: 64 }} value={reply} onChange={(e) => setReply(e.target.value)} placeholder="Draf balasan resmi…" aria-label="Draf balasan" />
           <Msg kind="error">{err}</Msg>
           <div className="row">
-            {canTriage && <button className="sm" disabled={!!busy} onClick={() => call("sg", `/m6/comments/${c.id}/suggest`)}>{busy === "sg" ? "Menyusun…" : "✦ Saran balasan AI"}</button>}
+            {canTriage && <button className="sm" disabled={!!busy} onClick={() => call("sg", `/m6/comments/${c.id}/suggest`)}>{busy === "sg" ? "Menyusun…" : "✦ Saran balasan SISTRA AGENT"}</button>}
             {canReply && <button className="sm" disabled={!reply.trim()} onClick={() => navigator.clipboard?.writeText(reply)}>Salin</button>}
             {canReply && <button className="sm primary" disabled={!!busy || reply.trim().length < 2} onClick={() => call("rp", `/m6/comments/${c.id}/reply`, { text: reply })}>Tandai sudah dibalas</button>}
             {canTriage && <button className="sm" disabled={!!busy} onClick={() => call("es", `/m6/comments/${c.id}/status`, { status: "dieskalasi" })}>Eskalasi</button>}
@@ -78,7 +78,7 @@ function IngestForm({ accounts, onDone }: { accounts: Account[]; onDone: (n: str
     });
     try {
       const r = await api<{ inserted: number; bot_flagged: number }>("/m6/comments", { method: "POST", body: { account_id: acc, issue_code: issue || null, items } });
-      setText(""); onDone(`${r.inserted} komentar dicatat${r.bot_flagged ? `; ${r.bot_flagged} terindikasi bot terkoordinasi` : ""}. Jalankan triase AI untuk mengelompokkan.`);
+      setText(""); onDone(`${r.inserted} komentar dicatat${r.bot_flagged ? `; ${r.bot_flagged} terindikasi bot terkoordinasi` : ""}. Jalankan triase SISTRA AGENT untuk mengelompokkan.`);
     } catch (ex) { setErr((ex as Error).message); }
   };
   return (
@@ -111,7 +111,7 @@ function CommentsTab({ accounts, setMsg }: { accounts: Account[]; setMsg: (n: No
   const triage = () => run("tr", async () => {
     try {
       const r = await api<{ mode: string; triaged: number; bot_flagged: number }>("/m6/comments/triage", { method: "POST", body: {} });
-      setMsg({ kind: r.mode === "claude" ? "ok" : "warn", text: `${r.triaged} komentar ditriase ${r.mode === "claude" ? "oleh Claude" : "(mode simulasi, berbasis kata kunci)"}${r.bot_flagged ? `; ${r.bot_flagged} terindikasi bot` : ""}.` });
+      setMsg({ kind: r.mode === "claude" ? "ok" : "warn", text: `${r.triaged} komentar ditriase ${r.mode === "claude" ? "oleh SISTRA AGENT" : "(mode simulasi, berbasis kata kunci)"}${r.bot_flagged ? `; ${r.bot_flagged} terindikasi bot` : ""}.` });
       list.reload();
     } catch (e) { setMsg({ kind: "error", text: (e as Error).message }); }
   });
@@ -130,7 +130,7 @@ function CommentsTab({ accounts, setMsg }: { accounts: Account[]; setMsg: (n: No
         </div>
         <div className="row">
           {canTriage && <button onClick={() => setIngest((x) => !x)}>{ingest ? "Tutup" : "+ Catat komentar"}</button>}
-          {canTriage && <button className="primary" disabled={!!busy} onClick={triage}>{busy ? "Mentriase…" : `✦ Triase AI${untriaged ? ` (${untriaged} baru)` : ""}`}</button>}
+          {canTriage && <button className="primary" disabled={!!busy} onClick={triage}>{busy ? "Mentriase…" : `✦ Triase SISTRA AGENT${untriaged ? ` (${untriaged} baru)` : ""}`}</button>}
         </div>
       </div>
       {ingest && <IngestForm accounts={accounts} onDone={(t) => { setIngest(false); setMsg({ kind: "ok", text: t }); list.reload(); }} />}
@@ -307,7 +307,7 @@ function KbTab({ setMsg }: { setMsg: (n: Note) => void }) {
   return (
     <div className="stack">
       <div className="row between">
-        <Msg kind="info">Jawaban baku yang sudah disetujui. AI memakai bahan ini sebagai rujukan saat menyusun saran balasan.</Msg>
+        <Msg kind="info">Jawaban baku yang sudah disetujui. SISTRA AGENT memakai bahan ini sebagai rujukan saat menyusun saran balasan.</Msg>
         {hasRole("redaktur", "pimpinan", "analis") && <button onClick={() => setAdding((x) => !x)}>{adding ? "Tutup" : "+ Bahan respons"}</button>}
       </div>
       {adding && (
@@ -348,7 +348,7 @@ export default function SocialPage() {
     <div className="stack">
       <div>
         <h1>Kanal Media Sosial Resmi <span className="muted" style={{ fontWeight: 400 }}>· M6</span></h1>
-        <p className="sub" style={{ marginBottom: 0 }}>Unggahan dan balasan dilakukan manual oleh petugas di platform; SISTRA mengatur tugas, membantu dengan AI, dan mencatat jejaknya</p>
+        <p className="sub" style={{ marginBottom: 0 }}>Unggahan dan balasan dilakukan manual oleh petugas di platform; SISTRA mengatur tugas, membantu dengan SISTRA AGENT, dan mencatat jejaknya</p>
       </div>
       <div className="grid g4">
         <Tile label="Akun resmi" value={acc.length} foot={`${nf.format(totals.followers)} pengikut`} />

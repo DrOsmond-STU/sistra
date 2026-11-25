@@ -9,7 +9,7 @@ import SebaranMap from "../components/geo";
 
 const TABS = [
   ["m4", "M4 · Produksi"], ["m5", "M5 · Editorial"], ["m6", "M6 · Kanal resmi"], ["m7", "M7 · Distribusi"], ["eng", "Keterlibatan per jam (S56)"],
-  ["dampak", "Dampak & IEKP (S57, S59)"], ["mutu", "Mutu AI (S64)"], ["ai", "Penggunaan AI"],
+  ["dampak", "Dampak & IEKP (S57, S59)"], ["mutu", "Mutu SISTRA AGENT (S64)"], ["ai", "Penggunaan SISTRA AGENT"],
 ] as const;
 
 export default function AnalyticsPage() {
@@ -22,7 +22,7 @@ export default function AnalyticsPage() {
       <div className="row between">
         <div>
           <h1>Dashboard Analitik</h1>
-          <p className="sub" style={{ marginBottom: 0 }}>Kinerja produksi, persetujuan, kanal resmi, distribusi 39 wilayah, dan pemakaian AI</p>
+          <p className="sub" style={{ marginBottom: 0 }}>Kinerja produksi, persetujuan, kanal resmi, distribusi 39 wilayah, dan pemakaian SISTRA AGENT</p>
         </div>
         <label className="row small">Periode
           <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
@@ -35,7 +35,7 @@ export default function AnalyticsPage() {
       {data && (
         <>
           <div className="grid g4">
-            <Tile label="Naskah disusun" value={nf.format(data.production.total)} foot={`${data.production.ai_assisted} dibantu AI (${fmtPct(data.production.total ? data.production.ai_assisted / data.production.total : 0)})`} />
+            <Tile label="Naskah disusun" value={nf.format(data.production.total)} foot={`${data.production.ai_assisted} dibantu SISTRA AGENT (${fmtPct(data.production.total ? data.production.ai_assisted / data.production.total : 0)})`} />
             <Tile label="Rerata skor editorial" value={data.editorial.avg_score ?? "-"} foot={`${data.editorial.checked} naskah diperiksa · ${data.editorial.returned} dikembalikan`} />
             <Tile label="Distribusi kanal web" value={nf.format(data.distribution.sent)} foot={`${nf.format(data.distribution.views)} tayangan · ${data.distribution.failed} gagal`} />
             <Tile label="Respons komentar" value={`${data.social.avg_reply_hours} jam`} foot={`${data.social.replied} dibalas · ${data.social.within_sla} dalam SLA 2 jam`} />
@@ -66,11 +66,11 @@ export default function AnalyticsPage() {
               <div className="card stack" style={{ gap: 10 }}>
                 <h2 style={{ margin: 0 }}>Mutu editorial</h2>
                 <dl className="kv">
-                  <dt>Rerata skor AI</dt><dd>{data.editorial.avg_score ?? "-"} / 100</dd>
+                  <dt>Rerata skor SISTRA AGENT</dt><dd>{data.editorial.avg_score ?? "-"} / 100</dd>
                   <dt>Naskah diperiksa</dt><dd>{data.editorial.checked}</dd>
                   <dt>Dikembalikan ke penulis</dt><dd>{data.editorial.returned}</dd>
                 </dl>
-                <div className="small muted">Skor dihitung oleh pemeriksa editorial AI (ejaan, SARA, nada, fakta, hukum, kejelasan). Keputusan tetap di tangan redaktur.</div>
+                <div className="small muted">Skor dihitung oleh pemeriksa editorial SISTRA AGENT (ejaan, SARA, nada, fakta, hukum, kejelasan). Keputusan tetap di tangan redaktur.</div>
               </div>
             </div>
           )}
@@ -125,11 +125,11 @@ export default function AnalyticsPage() {
           {tab === "mutu" && <QualityTab />}
           {tab === "ai" && (
             <div className="card table-wrap">
-              <h2>Pemakaian AI per fitur</h2>
-              {!data.ai.length && <div className="empty">Belum ada pemakaian AI pada periode ini.</div>}
+              <h2>Pemakaian SISTRA AGENT per fitur</h2>
+              {!data.ai.length && <div className="empty">Belum ada pemakaian SISTRA AGENT pada periode ini.</div>}
               {!!data.ai.length && (
                 <table>
-                  <thead><tr><th>Fitur</th><th className="num">Panggilan</th><th className="num">Oleh Claude</th><th className="num">Token masuk</th><th className="num">Token keluar</th><th className="num">Rerata waktu</th><th className="num">Galat</th></tr></thead>
+                  <thead><tr><th>Fitur</th><th className="num">Panggilan</th><th className="num">Oleh SISTRA AGENT</th><th className="num">Token masuk</th><th className="num">Token keluar</th><th className="num">Rerata waktu</th><th className="num">Galat</th></tr></thead>
                   <tbody>{data.ai.map((a) => (
                     <tr key={a.feature}>
                       <td>{AI_FEATURE_LABEL[a.feature] ?? a.feature}</td><td className="num">{a.calls}</td><td className="num">{a.live}</td>
@@ -139,7 +139,7 @@ export default function AnalyticsPage() {
                   ))}</tbody>
                 </table>
               )}
-              <div className="small muted" style={{ marginTop: 8 }}>Panggilan "simulasi" tidak memakai token. Isi kunci API di Pengaturan AI untuk mengaktifkan Claude.</div>
+              <div className="small muted" style={{ marginTop: 8 }}>Panggilan "simulasi" tidak memakai token. Isi kunci API di Pengaturan SISTRA AGENT untuk mengaktifkan SISTRA AGENT.</div>
             </div>
           )}
         </>

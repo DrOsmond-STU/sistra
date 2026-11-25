@@ -81,7 +81,7 @@ function PackDetail({ p, canEdit, canPublish, busy, act }: { p: Pack; canEdit: b
       <div className="row between"><h2 style={{ margin: 0 }}>{p.title}</h2><span className="row"><ModeChip mode={p.ai_mode} /><span className="chip">{p.status}</span></span></div>
       <div className="small muted">Pemicu: {p.trigger || "-"} · disusun {p.author_name}{p.published_at ? ` · terbit ${fmtDateTime(p.published_at)} oleh ${p.published_by_name}` : ""}</div>
       {draft && canEdit && <div className="row">
-        <button className="sm primary" disabled={!!busy} onClick={() => act("gen", () => api(`/m6/packs/${p.id}/generate`, { method: "POST" }), "Paket disusun AI — tinjau sebelum terbit.")}>{busy === "gen" ? "Menyusun…" : "✦ Susun dengan AI"}</button>
+        <button className="sm primary" disabled={!!busy} onClick={() => act("gen", () => api(`/m6/packs/${p.id}/generate`, { method: "POST" }), "Paket disusun SISTRA AGENT — tinjau sebelum terbit.")}>{busy === "gen" ? "Menyusun…" : "✦ Susun dengan SISTRA AGENT"}</button>
         <button className="sm" disabled={!!busy} onClick={() => act("sv", () => api(`/m6/packs/${p.id}`, { method: "PATCH", body: { holding_statement: hs, key_messages: km.split("\n").filter(Boolean), spokesperson: sp } }), "Perubahan tersimpan.")}>Simpan suntingan</button>
         {canPublish && <button className="sm" disabled={!!busy} onClick={() => act("pub", () => api(`/m6/packs/${p.id}/publish`, { method: "POST" }), "Paket terbit; Q&A masuk ke bahan respons dan operator diberi tahu.")}>Terbitkan</button>}
       </div>}
@@ -251,7 +251,7 @@ export function CampaignsTab({ setMsg }: { setMsg: (n: Note) => void }) {
             <div className={c.monitoring.sentiment.significant ? "status-ok" : "muted"}>{c.monitoring.sentiment.interpretation}</div>
           </div>
           <div className="row between"><h3 style={{ margin: 0 }}>Laporan evaluasi</h3>
-            {hasRole("redaktur", "pimpinan", "analis") && <button className="sm" disabled={!!busy} onClick={() => act("ev", () => api(`/m6/campaigns/${c.id}/evaluate`, { method: "POST" }), "Laporan evaluasi disusun.")}>{busy === "ev" ? "Menyusun…" : "✦ Susun evaluasi AI"}</button>}</div>
+            {hasRole("redaktur", "pimpinan", "analis") && <button className="sm" disabled={!!busy} onClick={() => act("ev", () => api(`/m6/campaigns/${c.id}/evaluate`, { method: "POST" }), "Laporan evaluasi disusun.")}>{busy === "ev" ? "Menyusun…" : "✦ Susun evaluasi SISTRA AGENT"}</button>}</div>
           {c.evaluation ? <div><ModeChip mode={c.evaluation_mode} /><div style={{ whiteSpace: "pre-wrap", marginTop: 6 }}>{c.evaluation}</div></div> : <div className="small muted">Belum ada evaluasi.</div>}
           <h3 style={{ margin: 0 }}>Matriks jadwal ({c.slot_list?.length ?? 0} slot)</h3>
           {["disetujui", "berjalan"].includes(c.status) && hasRole("redaktur", "pimpinan", "operator") && (

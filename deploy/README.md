@@ -104,7 +104,7 @@ Catatan:
 2. Salin `backend-php/src/*` → `~/sistra-api/src/` dan `backend-php/vendor-meta/` → `~/sistra-api/vendor-meta/`.
 3. Ekstrak `deploy/release/sistra-web.tar.bz2` (cek `SHA256SUMS`) ke root dokumen subdomain.
 4. Permintaan pertama menjalankan migrasi M4–M7 dan katalog KAK S26–S65 beserta data demo sintetis secara otomatis (penanda `~/sistra-data/.m47-v1` dan `.kak-v1`).
-5. Masuk sebagai admin → **Pengaturan AI** → *Pasang pustaka Claude* (server mengunduh Anthropic PHP SDK pada commit yang dikunci), lalu isi kunci API. Kunci disimpan di `~/sistra-data/ai.json` (0600) dan tidak pernah dikirim balik ke peramban. Tanpa kunci, AI berjalan dalam mode simulasi.
+5. Masuk sebagai admin → **Pengaturan SISTRA AGENT** → *Pasang pustaka Claude* (server mengunduh Anthropic PHP SDK pada commit yang dikunci), lalu isi kunci API. Kunci disimpan di `~/sistra-data/ai.json` (0600) dan tidak pernah dikirim balik ke peramban. Tanpa kunci, AI berjalan dalam mode simulasi.
 6. Hapus klon sementara bila tidak dipakai lagi.
 
 ### C.2 Lupa kata sandi akun bawaan (tanpa shell)

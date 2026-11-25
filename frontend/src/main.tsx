@@ -54,7 +54,8 @@ function Guarded() {
         <Route path="kanal-resmi" element={<SocialPage />} />
         <Route path="distribusi" element={<DistributionPage />} />
         <Route path="naskah" element={<DraftsPage />} />
-        <Route path="pengaturan-ai" element={<AiSettingsPage />} />
+        <Route path="pengaturan-agent" element={<AiSettingsPage />} />
+        <Route path="pengaturan-ai" element={<Navigate to="/pengaturan-agent" replace />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="pengguna" element={<UsersPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

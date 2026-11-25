@@ -10,7 +10,7 @@ import { ClassChip } from "./ui";
 interface NavItem { to: string; label: string; icon: string; code?: string; roles?: string[]; group?: string }
 
 // Modul lain (Dashboard Situasi, Peringatan Dini, Konten & Isu, Sumber, Repositori) disembunyikan:
-// sudah dikelola aplikasi lain. Fokus SISTRA: M4–M8 + data & CRUD + asisten AI.
+// sudah dikelola aplikasi lain. Fokus SISTRA: M4–M8 + data & CRUD + asisten SISTRA AGENT.
 const NAV: NavItem[] = [
   { to: "/", label: "Dashboard Eksekutif", icon: "ni-tv-2", group: "Ringkasan" },
   { to: "/peta", label: "Peta Sebaran", icon: "ni-map-big" },
@@ -26,7 +26,7 @@ const NAV: NavItem[] = [
   { to: "/distribusi", label: "Distribusi 39 Wilayah", icon: "ni-world-2", code: "M7" },
   { to: "/data", label: "Data & CRUD", icon: "ni-collection", group: "Data" },
   { to: "/naskah", label: "Daftar Naskah", icon: "ni-bullet-list-67" },
-  { to: "/pengaturan-ai", label: "Pengaturan AI", icon: "ni-atom", roles: ["admin"], group: "Sistem" },
+  { to: "/pengaturan-agent", label: "Pengaturan SISTRA AGENT", icon: "ni-atom", roles: ["admin"], group: "Sistem" },
   { to: "/audit", label: "Jejak Audit", icon: "ni-lock-circle-open", roles: ["auditor"] },
   { to: "/pengguna", label: "Pengguna", icon: "ni-single-02", roles: ["admin"] },
 ];

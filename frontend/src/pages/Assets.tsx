@@ -43,7 +43,7 @@ function Bank() {
     e.preventDefault(); if (!file) return;
     const fd = new FormData(); fd.append("file", file); Object.entries(f).forEach(([k, v]) => v && fd.append(k, k === "license_expires_at" ? new Date(v).toISOString() : v));
     if (linkTo) fd.append("draft_id", String(linkTo));
-    try { const a = await api<Asset>("/m5/assets", { method: "POST", form: fd }); setMsg({ kind: "ok", text: `Aset “${a.title}” tersimpan. Tag AI: ${a.ai_tags.join(", ") || "-"}` }); setShow(false); setFile(null); data.reload(); }
+    try { const a = await api<Asset>("/m5/assets", { method: "POST", form: fd }); setMsg({ kind: "ok", text: `Aset “${a.title}” tersimpan. Tag SISTRA AGENT: ${a.ai_tags.join(", ") || "-"}` }); setShow(false); setFile(null); data.reload(); }
     catch (ex) { setMsg({ kind: "error", text: (ex as Error).message }); }
   };
   const link = async (a: Asset) => {
@@ -63,7 +63,7 @@ function Bank() {
       </div>
       <div className="row between">
         <div className="row">
-          <input placeholder="Cari judul, tag, tag AI, kredit…" value={q} onChange={(e) => setQ(e.target.value)} style={{ minWidth: 260 }} aria-label="Cari aset" />
+          <input placeholder="Cari judul, tag, tag SISTRA AGENT, kredit…" value={q} onChange={(e) => setQ(e.target.value)} style={{ minWidth: 260 }} aria-label="Cari aset" />
           <select value={state} onChange={(e) => setState(e.target.value)} aria-label="Status lisensi"><option value="">Semua status</option><option value="aktif">Aktif</option><option value="segera_kedaluwarsa">Segera kedaluwarsa</option><option value="kedaluwarsa">Kedaluwarsa</option></select>
           <select value={lic} onChange={(e) => setLic(e.target.value)} aria-label="Jenis lisensi"><option value="">Semua lisensi</option>{Object.entries(data.data?.licenses ?? {}).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
         </div>
@@ -72,7 +72,7 @@ function Bank() {
       {msg && <Msg kind={msg.kind}>{msg.text}</Msg>}
       {show && (
         <form className="card form-grid" onSubmit={upload}>
-          <label className="field req full"><span>Berkas (gambar diberi tag otomatis oleh AI)</span><input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} required /></label>
+          <label className="field req full"><span>Berkas (gambar diberi tag otomatis oleh SISTRA AGENT)</span><input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} required /></label>
           <label className="field"><span>Judul</span><input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></label>
           <label className="field"><span>Kredit/pemilik</span><input value={f.credit} onChange={(e) => setF({ ...f, credit: e.target.value })} /></label>
           <label className="field req"><span>Lisensi</span><select value={f.license} onChange={(e) => setF({ ...f, license: e.target.value })}>{Object.entries(data.data?.licenses ?? {}).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
@@ -205,7 +205,7 @@ export default function AssetsPage() {
     <div className="stack">
       <div>
         <h1>Aset, Templat & Liputan <span className="muted" style={{ fontWeight: 400 }}>· M5 S37–S39</span></h1>
-        <p className="sub" style={{ marginBottom: 0 }}>Bank aset ber-lisensi dengan tag AI, pustaka templat identitas visual berversi, dan penjadwalan liputan lapangan</p>
+        <p className="sub" style={{ marginBottom: 0 }}>Bank aset ber-lisensi dengan tag SISTRA AGENT, pustaka templat identitas visual berversi, dan penjadwalan liputan lapangan</p>
       </div>
       <div className="tabs" role="tablist">
         {[["aset", "Bank aset (S37)"], ["templat", "Templat visual (S38)"], ["liputan", "Liputan lapangan (S39)"]].map(([k, v]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => set(k)}>{v}</button>)}

@@ -1,4 +1,4 @@
-/** S33: pratinjau naskah per platform tujuan, lengkap dengan batas karakter dan label konten AI. */
+/** S33: pratinjau naskah per platform tujuan, lengkap dengan batas karakter dan label konten SISTRA AGENT. */
 
 const PLATFORMS: { id: string; label: string; limit: number; note: string }[] = [
   { id: "web", label: "Portal web (kartu OpenGraph)", limit: 160, note: "Deskripsi kartu dipotong 160 karakter" },

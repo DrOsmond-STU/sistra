@@ -46,7 +46,7 @@ function NewDraft({ onCreated }: { onCreated: (d: Draft) => void }) {
           </select></label>
         <label className="row" style={{ alignSelf: "end" }}>
           <input type="checkbox" checked={f.ai_generated} onChange={(e) => setF({ ...f, ai_generated: e.target.checked })} />
-          Disusun dengan bantuan AI
+          Disusun dengan bantuan SISTRA AGENT
         </label>
       </div>
       <Msg kind="error">{err}</Msg>
@@ -132,7 +132,7 @@ export default function DraftsPage() {
               <thead><tr><th>Judul</th><th>Status</th><th>Penulis</th><th>Diperbarui</th></tr></thead>
               <tbody>{list.data.map((d) => (
                 <tr key={d.id} className={`clickable${sel?.id === d.id ? " selected" : ""}`} onClick={() => open(d.id)}>
-                  <td><b>{d.title}</b><div className="small muted">{d.kind}{d.ai_generated ? " · dibantu AI" : ""}{d.province_name ? ` · ${d.province_name}` : ""}</div></td>
+                  <td><b>{d.title}</b><div className="small muted">{d.kind}{d.ai_generated ? " · dibantu SISTRA AGENT" : ""}{d.province_name ? ` · ${d.province_name}` : ""}</div></td>
                   <td><span className="chip">{STATUS_DRAFT[d.status]}</span>{d.allowed_actions.length > 0 && <div className="small" style={{ color: "var(--accent)" }}>dapat Anda proses</div>}</td>
                   <td className="small">{d.author_name}</td>
                   <td className="small">{fmtDateTime(d.updated_at)}</td>

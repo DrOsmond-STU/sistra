@@ -1,4 +1,4 @@
-// Tipe data modul M4–M7, dashboard, dan asisten AI.
+// Tipe data modul M4–M7, dashboard, dan asisten SISTRA AGENT.
 
 export interface AiStatus {
   mode: "claude" | "simulasi"; configured: boolean; enabled: boolean; library: boolean; model: string; model_label: string;
@@ -96,5 +96,5 @@ export const COMMENT_STATUS: Record<string, string> = {
 export const HEALTH_LABEL: Record<string, string> = { normal: "Normal", lambat: "Lambat", gangguan: "Gangguan" };
 export const AI_FEATURE_LABEL: Record<string, string> = {
   generate: "Produksi konten", pelokalan: "Pelokalan", editorial: "Cek editorial", triase: "Triase komentar",
-  balasan: "Saran balasan", asisten: "Asisten AI", tulis_ulang: "Tulis ulang", uji: "Uji koneksi",
+  balasan: "Saran balasan", asisten: "Tanya SISTRA AGENT", tulis_ulang: "Tulis ulang", uji: "Uji koneksi",
 };

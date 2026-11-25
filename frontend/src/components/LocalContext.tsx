@@ -7,7 +7,7 @@ import { Msg, useLoad } from "./ui";
 interface Item { id: number; province_code: string; province_name: string; category: string; category_label: string; content: string; source: string; verified: boolean; verified_by_name: string | null; verified_at: string | null }
 interface Resp { items: Item[]; summary: Record<string, { total: number; verified: number }>; categories: Record<string, string> }
 
-/** S28: basis data konteks lokal terverifikasi — satu-satunya sumber fakta lokal untuk pelokalan AI. */
+/** S28: basis data konteks lokal terverifikasi — satu-satunya sumber fakta lokal untuk pelokalan SISTRA AGENT. */
 export default function LocalContext() {
   const { hasRole } = useAuth();
   const provinces = useLoad(() => api<{ code: string; name: string }[]>("/provinces"), []);
@@ -22,7 +22,7 @@ export default function LocalContext() {
   const verifiedTotal = Object.values(sum).reduce((a, x) => a + x.verified, 0);
   const add = async (e: FormEvent) => {
     e.preventDefault();
-    try { await api("/m4/local-context", { method: "POST", body: { ...f, province_code: prov } }); setF({ ...f, content: "", source: "" }); one.reload(); all.reload(); setMsg({ kind: "ok", text: "Ditambahkan — menunggu verifikasi redaktur sebelum dipakai AI." }); }
+    try { await api("/m4/local-context", { method: "POST", body: { ...f, province_code: prov } }); setF({ ...f, content: "", source: "" }); one.reload(); all.reload(); setMsg({ kind: "ok", text: "Ditambahkan — menunggu verifikasi redaktur sebelum dipakai SISTRA AGENT." }); }
     catch (ex) { setMsg({ kind: "error", text: (ex as Error).message }); }
   };
   const verify = async (it: Item, v: boolean) => {
@@ -30,7 +30,7 @@ export default function LocalContext() {
   };
   return (
     <div className="stack">
-      <Msg kind="info">Pelokalan AI hanya memakai butir <b>terverifikasi</b> di basis data ini (kriteria KAK S28: fakta lokal 100% dari basis data terverifikasi, ditinjau redaktur). Total {verifiedTotal} butir terverifikasi di {Object.keys(sum).length} provinsi.</Msg>
+      <Msg kind="info">Pelokalan SISTRA AGENT hanya memakai butir <b>terverifikasi</b> di basis data ini (kriteria KAK S28: fakta lokal 100% dari basis data terverifikasi, ditinjau redaktur). Total {verifiedTotal} butir terverifikasi di {Object.keys(sum).length} provinsi.</Msg>
       <div className="card">
         <h2>Kelengkapan per provinsi</h2>
         <div className="chgrid">

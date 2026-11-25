@@ -295,7 +295,7 @@ function fetch_feed(string $url): array
 
 // ================= Alur naskah =================
 const AUTHOR_ROLES = ['redaktur', 'produser', 'analis'];
-const AI_LABEL = 'Konten ini disusun dengan bantuan AI dan telah ditinjau oleh redaksi.';
+const AI_LABEL = 'Konten ini disusun dengan bantuan SISTRA AGENT (sistem kecerdasan buatan) dan telah ditinjau oleh redaksi.';
 const DRAFT_RULES = [
     'draf>ditinjau' => ['roles' => AUTHOR_ROLES, 'author_only' => true],
     'ditinjau>draf' => ['roles' => ['redaktur', 'pimpinan'], 'not_author' => true, 'comment' => true],

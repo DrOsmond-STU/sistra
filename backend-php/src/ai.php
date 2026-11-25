@@ -8,11 +8,11 @@
  */
 declare(strict_types=1);
 
-const AI_MODELS = ['claude-opus-5-5' => 'Claude Opus 5.5', 'claude-sonnet-5-5' => 'Claude Sonnet 5.5', 'claude-haiku-5-5' => 'Claude Haiku 5.5'];
+const AI_MODELS = ['claude-opus-5-5' => 'SISTRA AGENT Pro (paling cermat)', 'claude-sonnet-5-5' => 'SISTRA AGENT Standar', 'claude-haiku-5-5' => 'SISTRA AGENT Cepat'];
 const AI_DEFAULT_MODEL = 'claude-opus-5-5';
 
 const AI_SYSTEM_BASE = <<<TXT
-Anda adalah asisten AI di SISTRA (Sistem Informasi dan Aksi Strategis), alat kerja tim komunikasi publik pemerintah Indonesia.
+Anda adalah SISTRA AGENT, agen kerja di SISTRA (Sistem Informasi dan Aksi Strategis), alat kerja tim komunikasi publik pemerintah Indonesia. Sebut diri Anda hanya sebagai "SISTRA AGENT"; jangan menyebut nama model, vendor, atau istilah "AI" tentang diri Anda.
 Prinsip yang wajib dipegang:
 - Bahasa Indonesia baku yang mengikuti PUEBI/EYD, jelas, santun, dan mudah dipahami warga.
 - Hanya memakai fakta yang diberikan pengguna. Jangan mengarang angka, kutipan, nama pejabat, atau kejadian. Bila data kurang, tulis penanda seperti [DATA PERLU DIVERIFIKASI].
@@ -83,34 +83,34 @@ function ai_call(?array $u, string $feature, string $system, array $messages, ?a
             : $client->messages->create(...$args);
     } catch (Anthropic\Core\Exceptions\AuthenticationException $e) {
         ai_log($u, $feature, 'claude', $c['model'], 0, 0, (int)((microtime(true) - $t0) * 1000), false);
-        throw new HttpError(502, 'Kunci API AI ditolak. Periksa kunci di menu Pengaturan AI.');
+        throw new HttpError(502, 'Kunci API SISTRA AGENT ditolak. Periksa kunci di menu Pengaturan SISTRA AGENT.');
     } catch (Anthropic\Core\Exceptions\RateLimitException $e) {
         ai_log($u, $feature, 'claude', $c['model'], 0, 0, (int)((microtime(true) - $t0) * 1000), false);
-        throw new HttpError(503, 'Layanan AI sedang sibuk (batas laju). Coba lagi sebentar.');
+        throw new HttpError(503, 'SISTRA AGENT sedang sibuk (batas laju). Coba lagi sebentar.');
     } catch (Anthropic\Core\Exceptions\APIStatusException $e) {
         ai_log($u, $feature, 'claude', $c['model'], 0, 0, (int)((microtime(true) - $t0) * 1000), false);
-        error_log('SISTRA AI: ' . get_class($e) . ' ' . substr($e->getMessage(), 0, 300));
-        throw new HttpError(502, 'Layanan AI mengembalikan galat. Coba lagi, atau pakai mode simulasi.');
+        error_log('SISTRA AGENT: ' . get_class($e) . ' ' . substr($e->getMessage(), 0, 300));
+        throw new HttpError(502, 'SISTRA AGENT mengembalikan galat. Coba lagi, atau pakai mode simulasi.');
     } catch (Anthropic\Core\Exceptions\APIException $e) {
         ai_log($u, $feature, 'claude', $c['model'], 0, 0, (int)((microtime(true) - $t0) * 1000), false);
-        error_log('SISTRA AI: ' . get_class($e) . ' ' . substr($e->getMessage(), 0, 300));
-        throw new HttpError(504, 'Tidak dapat menghubungi layanan AI (jaringan/waktu habis).');
+        error_log('SISTRA AGENT: ' . get_class($e) . ' ' . substr($e->getMessage(), 0, 300));
+        throw new HttpError(504, 'Tidak dapat menghubungi SISTRA AGENT (jaringan/waktu habis).');
     }
     $ms = (int)((microtime(true) - $t0) * 1000);
     $in = (int)($msg->usage->inputTokens ?? 0) + (int)($msg->usage->cacheReadInputTokens ?? 0) + (int)($msg->usage->cacheCreationInputTokens ?? 0);
     $out = (int)($msg->usage->outputTokens ?? 0);
     if ($msg->stopReason === 'refusal') {
         ai_log($u, $feature, 'claude', $msg->model, $in, $out, $ms, false);
-        throw new HttpError(422, 'AI menolak permintaan ini karena kebijakan keamanan. Ubah brief atau susun manual.');
+        throw new HttpError(422, 'SISTRA AGENT menolak permintaan ini karena kebijakan keamanan. Ubah brief atau susun manual.');
     }
     $text = '';
     foreach ($msg->content as $block) { if ($block->type === 'text') $text .= $block->text; }
     ai_log($u, $feature, 'claude', $msg->model, $in, $out, $ms, true);
-    if ($msg->stopReason === 'max_tokens') throw new HttpError(502, 'Keluaran AI terpotong (terlalu panjang). Kurangi jumlah variasi atau panjang naskah.');
+    if ($msg->stopReason === 'max_tokens') throw new HttpError(502, 'Keluaran SISTRA AGENT terpotong (terlalu panjang). Kurangi jumlah variasi atau panjang naskah.');
     $json = null;
     if ($schema !== null) {
         $json = json_decode($text, true);
-        if (!is_array($json)) throw new HttpError(502, 'Keluaran AI tidak dapat dibaca. Coba lagi.');
+        if (!is_array($json)) throw new HttpError(502, 'Keluaran SISTRA AGENT tidak dapat dibaca. Coba lagi.');
     }
     return ['text' => $text, 'json' => $json, 'model' => $msg->model];
 }
@@ -140,7 +140,7 @@ function ai_generate_content(?array $u, array $brief, int $n): array
         $out = [];
         for ($i = 0; $i < $n; $i++) $out[] = sim_variant($brief, ANGLES[$i], $fmt, $region);
         ai_log($u, 'generate', 'simulasi', null, 0, 0, 0, true);
-        return ['mode' => 'simulasi', 'variants' => $out, 'notes' => 'Mode simulasi: isi kunci API di Pengaturan AI agar konten disusun oleh Claude.'];
+        return ['mode' => 'simulasi', 'variants' => $out, 'notes' => 'Mode simulasi: isi kunci API di Pengaturan SISTRA AGENT agar konten disusun oleh SISTRA AGENT.'];
     }
     $facts = !empty($brief['fact_items']) ? kak_fact_lines($brief['fact_items']) : implode("\n", array_map(fn($f) => "- $f", $brief['facts'] ?: []));
     $prompt = "Susun {$n} variasi konten dengan sudut pandang berbeda.\n\nFormat: {$fmt}\nIsu: {$brief['issue_name']}\nJudul kerja: {$brief['title']}\n"
@@ -235,7 +235,7 @@ function ai_chat(?array $u, array $history, string $page, string $context): arra
         return ['mode' => 'simulasi', 'reply' => sim_chat($q, $context)];
     }
     $msgs = array_map(fn($m) => ['role' => $m['role'], 'content' => mb_substr((string)$m['content'], 0, 6000)], $history);
-    $sys = "Tugas: Asisten AI SISTRA untuk modul Produksi Narasi, Editorial & Persetujuan, Kanal Media Sosial Resmi, dan Distribusi 39 Kanal.\n"
+    $sys = "Tugas: SISTRA AGENT untuk modul Produksi Narasi, Editorial & Persetujuan, Kanal Media Sosial Resmi, dan Distribusi 39 Kanal.\n"
         . "Pengguna: {$u['full_name']} (peran: " . implode(', ', jdec($u['roles'])) . "). Halaman yang sedang dibuka: {$page}.\n"
         . "Jawab ringkas dan praktis. Gunakan data ringkasan di bawah bila relevan; jangan mengarang angka di luar itu. Bila diminta menyusun konten, beri draf yang siap disunting.\n"
         . "Anda tidak dapat menjalankan aksi di aplikasi (menyetujui, menayangkan, membalas); arahkan pengguna ke menu yang tepat.\n\nRINGKASAN DATA SAAT INI:\n{$context}";
@@ -272,7 +272,7 @@ function sim_editorial(string $title, string $body, array $facts): array
     if (preg_match('/\b(bodoh|tolol|provokator|antek)\b/iu', $text, $m)) $f[] = ['category' => 'nada', 'severity' => 'kritis', 'excerpt' => $m[0], 'suggestion' => 'Hapus diksi merendahkan; fokus pada fakta dan layanan.'];
     if (mb_strlen($body) < 200) $f[] = ['category' => 'kejelasan', 'severity' => 'info', 'excerpt' => mb_substr($body, 0, 60) . '…', 'suggestion' => 'Tambahkan informasi apa, siapa, kapan, dan ke mana warga dapat mencari bantuan.'];
     $score = max(40, 95 - array_sum(array_map(fn($x) => ['info' => 4, 'peringatan' => 12, 'kritis' => 30][$x['severity']], $f)));
-    return ['score' => $score, 'summary' => '[SIMULASI] Pemeriksaan berbasis aturan sederhana. Isi kunci API agar pemeriksaan dilakukan Claude.', 'findings' => $f];
+    return ['score' => $score, 'summary' => '[SIMULASI] Pemeriksaan berbasis aturan sederhana. Isi kunci API agar pemeriksaan dilakukan SISTRA AGENT.', 'findings' => $f];
 }
 function sim_triage(array $c): array
 {
@@ -294,7 +294,7 @@ function sim_triage(array $c): array
 }
 function sim_chat(string $q, string $context): string
 {
-    return "[MODE SIMULASI] Asisten belum terhubung ke Claude karena kunci API belum diisi (menu Pengaturan AI, peran admin).\n\n"
+    return "[MODE SIMULASI] SISTRA AGENT belum terhubung karena kunci API belum diisi (menu Pengaturan SISTRA AGENT, peran admin).\n\n"
         . "Ringkasan data saat ini yang bisa membantu menjawab \"" . mb_substr($q, 0, 120) . "\":\n" . $context;
 }
 

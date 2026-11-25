@@ -55,13 +55,13 @@ export default function AiAssistant() {
     }
   };
 
-  if (!open) return <button className="ai-fab" onClick={() => setOpen(true)} aria-label="Buka Asisten AI">✦ Asisten AI</button>;
+  if (!open) return <button className="ai-fab" onClick={() => setOpen(true)} aria-label="Buka SISTRA AGENT">✦ SISTRA AGENT</button>;
   const sugg = SUGGEST[loc.pathname] ?? SUGGEST["/"];
   return (
-    <section className="ai-panel" aria-label="Asisten AI">
+    <section className="ai-panel" aria-label="SISTRA AGENT">
       <div className="ai-head">
         <div>
-          <b>✦ Asisten AI SISTRA</b>
+          <b>✦ SISTRA AGENT</b>
           <div className="small muted">Mengetahui ringkasan data produksi, persetujuan, kanal, dan komentar</div>
         </div>
         <div className="row" style={{ gap: 6 }}>
@@ -73,7 +73,7 @@ export default function AiAssistant() {
       <div className="ai-log" ref={logRef} aria-live="polite">
         {msgs.length === 0 && (
           <div className="stack" style={{ gap: 8 }}>
-            <div className="small muted">Tanyakan kondisi terkini, minta ide konten, atau minta saran langkah. Jawaban AI adalah bahan pertimbangan, bukan keputusan.</div>
+            <div className="small muted">Tanyakan kondisi terkini, minta ide konten, atau minta saran langkah. Jawaban SISTRA AGENT adalah bahan pertimbangan, bukan keputusan.</div>
             <div className="ai-sugg">{sugg.map((s) => <button key={s} onClick={() => send(s)}>{s}</button>)}</div>
           </div>
         )}

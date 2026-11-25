@@ -49,7 +49,7 @@ export default function ReportsPage() {
       <div className="row between no-print">
         <div>
           <h1>Laporan Berkala <span className="muted" style={{ fontWeight: 400 }}>· M8 S61</span></h1>
-          <p className="sub" style={{ marginBottom: 0 }}>Laporan harian & mingguan terbit otomatis; laporan bulanan dapat disusun kapan saja. Ringkasan eksekutif disusun AI dari data.</p>
+          <p className="sub" style={{ marginBottom: 0 }}>Laporan harian & mingguan terbit otomatis; laporan bulanan dapat disusun kapan saja. Ringkasan eksekutif disusun SISTRA AGENT dari data.</p>
         </div>
         {hasRole("pimpinan", "analis", "redaktur") && <div className="row">{["harian", "mingguan", "bulanan"].map((p) => (
           <button key={p} disabled={!!busy} onClick={() => run(p, async () => { try { const x = await api<{ id: number }>("/reports", { method: "POST", body: { period: p } }); list.reload(); setSel(x.id); setMsg({ kind: "ok", text: `Laporan ${p} disusun.` }); } catch (e) { setMsg({ kind: "error", text: (e as Error).message }); } })}>

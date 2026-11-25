@@ -62,7 +62,7 @@ export function ChannelCms({ setMsg }: { setMsg: (n: Note) => void }) {
               <thead><tr><th>Artikel</th><th>Status</th><th className="num">Sinkron</th><th className="num">Tayangan</th><th className="num">Pembaca unik</th><th className="num">Waktu baca</th><th></th></tr></thead>
               <tbody>{c.articles.map((a) => (
                 <tr key={a.id}>
-                  <td><b>{a.title}</b>{a.ai_label && <div className="small muted">berlabel konten dibantu AI</div>}{a.takedown_reason && <div className="small status-bad">Ditarik: {a.takedown_reason}</div>}{a.error && <div className="small status-bad">{a.error}</div>}</td>
+                  <td><b>{a.title}</b>{a.ai_label && <div className="small muted">berlabel konten dibantu SISTRA AGENT</div>}{a.takedown_reason && <div className="small status-bad">Ditarik: {a.takedown_reason}</div>}{a.error && <div className="small status-bad">{a.error}</div>}</td>
                   <td className="small"><span className={`chip ${a.status === "terkirim" ? "st-ok" : a.status === "gagal" || a.status === "ditarik" ? "st-bad" : ""}`}>{a.status}</span><div className="muted">{fmtDateTime(a.sent_at ?? a.scheduled_at)}</div></td>
                   <td className="num small">{a.sync_ms != null ? <span className={a.sync_ms <= 5000 ? "status-ok" : "status-bad"}>{(a.sync_ms / 1000).toFixed(1)} dtk</span> : "-"}</td>
                   <td className="num">{nf.format(a.views)}</td><td className="num">{nf.format(a.uniques)}</td><td className="num">{a.avg_time_sec ? `${a.avg_time_sec} dtk` : "-"}</td>

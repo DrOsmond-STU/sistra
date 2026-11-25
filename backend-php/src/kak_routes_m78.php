@@ -21,7 +21,7 @@ function og_package(array $d): array
         ['rule' => 'og:image 1200×630 tersedia', 'ok' => true],
         ['rule' => 'Schema.org headline ≤ 110 karakter', 'ok' => mb_strlen($d['title']) <= 110],
         ['rule' => 'datePublished berformat ISO 8601', 'ok' => (bool)ts_from_iso($ld['datePublished'])],
-        ['rule' => 'Label konten dibantu AI (bila berlaku)', 'ok' => !$d['ai_generated'] || isset($ld['creditText'])],
+        ['rule' => 'Label konten dibantu SISTRA AGENT (bila berlaku)', 'ok' => !$d['ai_generated'] || isset($ld['creditText'])],
         ['rule' => 'Naskah berstatus disetujui/tayang', 'ok' => in_array($d['status'], ['disetujui', 'tayang'], true)],
     ];
     return ['opengraph' => $og, 'jsonld' => $ld, 'checks' => $checks, 'valid' => !in_array(false, array_column($checks, 'ok'), true)];

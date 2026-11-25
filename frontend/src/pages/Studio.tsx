@@ -99,7 +99,7 @@ function InfographicEditor({ m, tpls, draftId, onSaved }: { m: Media; tpls: Tpl[
             try {
               await api(`/m4/media/${m.id}`, { method: "PATCH", body: { spec, template_code: tpl } });
               const fd = new FormData(); fd.append("file", await svgToPng(svg), `infografis-${m.id}.png`);
-              fd.append("title", `Infografis: ${spec.title}`); fd.append("license", "milik_sendiri"); fd.append("credit", "Tim produksi (dibantu AI)");
+              fd.append("title", `Infografis: ${spec.title}`); fd.append("license", "milik_sendiri"); fd.append("credit", "Tim produksi (dibantu SISTRA AGENT)");
               fd.append("draft_id", String(draftId)); fd.append("media_id", String(m.id)); fd.append("tags", "infografis");
               await api("/m5/assets", { method: "POST", form: fd });
               setMsg({ kind: "ok", text: "Tersimpan dan dimasukkan ke Bank Aset (tertaut ke naskah)." }); onSaved();
@@ -280,7 +280,7 @@ export default function StudioPage() {
         <div className="row">
           <label className="field" style={{ flex: 1, minWidth: 260 }}><span>Naskah sumber</span>
             <select value={draftId} onChange={(e) => setDraftId(Number(e.target.value))}>{usable.map((x) => <option key={x.id} value={x.id}>#{x.id} {x.title} · {STATUS_DRAFT[x.status]}</option>)}</select></label>
-          {d && <span className="small muted">{d.ai_generated ? "Dibantu AI · " : ""}{d.author_name}</span>}
+          {d && <span className="small muted">{d.ai_generated ? "Dibantu SISTRA AGENT · " : ""}{d.author_name}</span>}
         </div>
         {isAuthor && (
           <div className="row" style={{ gap: 14 }}>

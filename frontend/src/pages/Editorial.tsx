@@ -22,11 +22,11 @@ function KCard({ c, sel, onOpen }: { c: Card; sel: boolean; onOpen: () => void }
       <span className="meta">
         <span>{FORMAT_LABEL[c.format] ?? c.format}</span>
         {c.province_name && <span>{c.province_name}</span>}
-        {c.ai_generated && <span title="Disusun dengan bantuan AI">✦ AI</span>}
+        {c.ai_generated && <span title="Disusun dengan bantuan SISTRA AGENT">✦ SISTRA AGENT</span>}
       </span>
       <span className="meta">
         <Prio p={c.priority} />
-        {c.editorial_score !== null && <span title="Skor editorial AI">skor {c.editorial_score}</span>}
+        {c.editorial_score !== null && <span title="Skor editorial SISTRA AGENT">skor {c.editorial_score}</span>}
         {c.comments > 0 && <span>💬 {c.comments}</span>}
       </span>
       <span className="meta">
@@ -212,11 +212,11 @@ export default function EditorialPage() {
       <div className="row between">
         <div>
           <h1>Editorial & Persetujuan <span className="muted" style={{ fontWeight: 400 }}>· M5</span></h1>
-          <p className="sub" style={{ marginBottom: 0 }}>Papan kerja redaksi: tugaskan, diskusikan, periksa dengan AI, setujui bertanda tangan, dan jadwalkan tayang</p>
+          <p className="sub" style={{ marginBottom: 0 }}>Papan kerja redaksi: tugaskan, diskusikan, periksa dengan SISTRA AGENT, setujui bertanda tangan, dan jadwalkan tayang</p>
         </div>
         <div className="row">
           <Link className="btn" to="/kalender">Kalender</Link>
-          <Link className="btn primary" to="/produksi">+ Produksi dengan AI</Link>
+          <Link className="btn primary" to="/produksi">+ Produksi dengan SISTRA AGENT</Link>
         </div>
       </div>
       {board.error && <Msg kind="error">{board.error}</Msg>}
