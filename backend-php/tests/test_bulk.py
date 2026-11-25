@@ -95,3 +95,20 @@ def test_geo_local_articles_stay_in_their_province(db_bulk, client, login):
         bad = c.execute(text("""SELECT COUNT(*) FROM distributions d JOIN channels ch ON ch.id = d.channel_id JOIN drafts r ON r.id = d.draft_id
                                 WHERE r.province_code IS NOT NULL AND ch.type = 'provinsi' AND ch.province_code <> r.province_code""")).scalar()
     assert bad == 0
+
+
+def test_multimedia_demo_complete(db_bulk, client, login):
+    """Studio Multimedia: setiap naskah disetujui/tayang punya infografis, video, dan audio; galeri bisa disaring & dicari."""
+    h = login("produser")
+    st = client.get("/api/m4/media/stats", headers=h).json()
+    assert st["eligible_drafts"] > 100 and st["complete_drafts"] == st["eligible_drafts"]
+    assert min(st["by_kind"].values()) >= st["eligible_drafts"] and st["total"] >= 900
+    assert st["exported_assets"] >= 30
+    vids = client.get("/api/m4/media", headers=h, params={"kind": "video", "limit": 50}).json()
+    assert len(vids) == 50 and all(v["kind"] == "video" and v["spec"]["scenes"] and v["ai_mode"] == "simulasi" for v in vids)
+    page2 = client.get("/api/m4/media", headers=h, params={"limit": 24, "offset": 24}).json()
+    assert len(page2) == 24
+    one = vids[0]
+    hit = client.get("/api/m4/media", headers=h, params={"q": f"#{one['draft_id']}"}).json()
+    assert hit and all(x["draft_id"] == one["draft_id"] for x in hit) and {x["kind"] for x in hit} >= {"infografis", "video", "podcast"}
+    assert client.get("/api/m4/media", headers=h, params={"limit": 999}).status_code == 422

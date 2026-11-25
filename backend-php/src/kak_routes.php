@@ -189,11 +189,22 @@ function register_routes_kak(Router $r): void
     });
     $r->add('GET', '/api/m4/media', function () {
         current_user();
-        $did = (int)qparam('draft_id', 0); $k = qparam('kind');
+        $did = (int)qparam('draft_id', 0); $k = qparam('kind'); $qq = trim((string)qparam('q', ''));
+        $limit = qint('limit', 100, 1, 200); $offset = qint('offset', 0, 0, 1000000);
         $w = ['1=1']; $p = [];
         if ($did) { $w[] = 'draft_id = ?'; $p[] = $did; }
         if ($k) { $w[] = 'kind = ?'; $p[] = $k; }
-        send_json(array_map('media_out', all('SELECT * FROM media_outputs WHERE ' . implode(' AND ', $w) . ' ORDER BY id DESC LIMIT 100', $p)));
+        if ($qq !== '') { $w[] = '(title LIKE ? OR CAST(draft_id AS TEXT) = ?)'; $p[] = '%' . $qq . '%'; $p[] = ltrim($qq, '#'); }
+        send_json(array_map('media_out', all('SELECT * FROM media_outputs WHERE ' . implode(' AND ', $w) . " ORDER BY created_at DESC, id DESC LIMIT $limit OFFSET $offset", $p)));
+    });
+    $r->add('GET', '/api/m4/media/stats', function () {
+        current_user();
+        $by = []; foreach (all('SELECT kind, COUNT(*) n FROM media_outputs GROUP BY kind') as $x) $by[$x['kind']] = (int)$x['n'];
+        $eligible = (int)val("SELECT COUNT(*) FROM drafts WHERE status IN ('disetujui','tayang')");
+        $full = (int)val("SELECT COUNT(*) FROM drafts d WHERE d.status IN ('disetujui','tayang') AND (SELECT COUNT(DISTINCT kind) FROM media_outputs m WHERE m.draft_id = d.id) >= 3");
+        send_json(['total' => array_sum($by), 'by_kind' => ['infografis' => $by['infografis'] ?? 0, 'video' => $by['video'] ?? 0, 'podcast' => $by['podcast'] ?? 0],
+            'drafts_with_media' => (int)val('SELECT COUNT(DISTINCT draft_id) FROM media_outputs'), 'eligible_drafts' => $eligible, 'complete_drafts' => $full,
+            'exported_assets' => (int)val('SELECT COUNT(*) FROM media_outputs WHERE asset_id IS NOT NULL'), 'last_at' => val('SELECT MAX(created_at) FROM media_outputs')]);
     });
     $r->add('PATCH', '/api/m4/media/(\d+)', function ($id) {
         $u = require_roles(...AUTHOR_ROLES);

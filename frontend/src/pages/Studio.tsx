@@ -245,6 +245,90 @@ function PodcastStudio({ m }: { m: Media }) {
   );
 }
 
+
+// ---------------------------------------------------------------- galeri
+interface MStats { total: number; by_kind: { infografis: number; video: number; podcast: number }; drafts_with_media: number; eligible_drafts: number; complete_drafts: number; exported_assets: number }
+const KIND_LABEL: Record<string, string> = { infografis: "Infografis", video: "Video pendek", podcast: "Naskah audio" };
+const KIND_ICON: Record<string, string> = { infografis: "🖼", video: "🎬", podcast: "🎙" };
+
+function MediaThumb({ m, tpls }: { m: Media; tpls: Tpl[] }) {
+  const src = useMemo(() => {
+    if (m.kind !== "infografis" || !m.spec?.title) return null;
+    const t = tpls.find((x) => x.code === m.template_code)?.spec ?? FALLBACK_TPL;
+    try { return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(infographicSvg(m.spec as InfSpec, t, "feed")); } catch { return null; }
+  }, [m, tpls]);
+  if (src) return <img className="mg-thumb" src={src} alt="" loading="lazy" />;
+  if (m.kind === "video") {
+    const sc = (m.spec?.scenes ?? []) as Scene[];
+    return (
+      <div className="mg-thumb mg-video">
+        <span className="mg-play" aria-hidden>▶</span>
+        <span className="mg-cap">{sc[1]?.caption_id ?? sc[0]?.caption_id ?? m.title}</span>
+        <span className="mg-meta">{m.spec?.aspect ?? "9:16"} · {m.spec?.duration ?? 45} dtk · {sc.length} adegan</span>
+      </div>
+    );
+  }
+  const seg = (m.spec?.segments ?? []) as { speaker: string; text: string }[];
+  return (
+    <div className="mg-thumb mg-audio">
+      <span className="mg-wave" aria-hidden>{Array.from({ length: 28 }, (_, i) => <i key={i} style={{ height: `${18 + ((i * 37 + m.id * 13) % 70)}%` }} />)}</span>
+      <span className="mg-meta">{m.spec?.minutes ?? 2} menit · {seg.length} segmen · {new Set(seg.map((x) => x.speaker)).size || 1} suara</span>
+    </div>
+  );
+}
+
+function MediaGallery({ tpls, onOpen }: { tpls: Tpl[]; onOpen: (m: Media) => void }) {
+  const stats = useLoad(() => api<MStats>("/m4/media/stats"), []);
+  const [kind, setKind] = useState("");
+  const [q, setQ] = useState("");
+  const [qd, setQd] = useState("");
+  const [limit, setLimit] = useState(24);
+  useEffect(() => { const t = setTimeout(() => { setQd(q.trim()); setLimit(24); }, 300); return () => clearTimeout(t); }, [q]);
+  const list = useLoad(() => api<Media[]>("/m4/media", { query: { kind: kind || undefined, q: qd || undefined, limit } }), [kind, qd, limit]);
+  const st = stats.data;
+  const count = kind ? st?.by_kind[kind as keyof MStats["by_kind"]] ?? 0 : st?.total ?? 0;
+  return (
+    <div className="card stack" style={{ gap: 12 }}>
+      <div className="row between" style={{ alignItems: "flex-start" }}>
+        <div><h2 style={{ margin: 0 }}>Galeri multimedia</h2><div className="small muted">Semua keluaran Studio dari naskah yang disetujui/tayang. Klik kartu untuk membuka, menyunting, atau mengunduh.</div></div>
+        <input placeholder="Cari judul atau #naskah…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Cari keluaran multimedia" style={{ minWidth: 240 }} />
+      </div>
+      {st && (
+        <div className="mg-stats">
+          <div><span>Total keluaran</span><b>{st.total.toLocaleString("id-ID")}</b></div>
+          <div><span>🖼 Infografis</span><b>{st.by_kind.infografis.toLocaleString("id-ID")}</b></div>
+          <div><span>🎬 Video pendek</span><b>{st.by_kind.video.toLocaleString("id-ID")}</b></div>
+          <div><span>🎙 Naskah audio</span><b>{st.by_kind.podcast.toLocaleString("id-ID")}</b></div>
+          <div><span>Naskah lengkap 3 format</span><b>{st.complete_drafts}<small> / {st.eligible_drafts}</small></b></div>
+          <div><span>Diekspor ke bank aset</span><b>{st.exported_assets}</b></div>
+        </div>
+      )}
+      <div className="subtabs" role="tablist" aria-label="Jenis keluaran">
+        {[["", "Semua"], ["infografis", "🖼 Infografis"], ["video", "🎬 Video"], ["podcast", "🎙 Audio"]].map(([k, l]) => (
+          <button key={k} role="tab" aria-selected={kind === k} className={kind === k ? "on" : ""} onClick={() => { setKind(k); setLimit(24); }}>{l}</button>
+        ))}
+      </div>
+      <div className="mg-grid">
+        {list.data?.map((m) => (
+          <button key={m.id} type="button" className="mg-card" onClick={() => onOpen(m)} title={m.title}>
+            <MediaThumb m={m} tpls={tpls} />
+            <span className="mg-body">
+              <span className="mg-kind">{KIND_ICON[m.kind]} {KIND_LABEL[m.kind]}{m.asset_id ? <em> · di bank aset</em> : null}</span>
+              <span className="mg-title">{m.title}</span>
+              <span className="mg-foot">#{m.draft_id} · {fmtDateTime(m.created_at)}</span>
+            </span>
+          </button>
+        ))}
+      </div>
+      {list.loading && <div className="small muted">Memuat…</div>}
+      {!list.loading && !list.data?.length && <div className="empty">Belum ada keluaran yang cocok.</div>}
+      {!!list.data?.length && list.data.length < count && list.data.length >= limit && limit < 200 && (
+        <div className="row" style={{ justifyContent: "center" }}><button onClick={() => setLimit((l) => Math.min(200, l + 24))}>Tampilkan lebih banyak ({list.data.length} dari {count.toLocaleString("id-ID")})</button></div>
+      )}
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------- halaman
 export default function StudioPage() {
   const { hasRole } = useAuth();
@@ -260,7 +344,8 @@ export default function StudioPage() {
   const isAuthor = hasRole("redaktur", "produser", "analis");
   const usable = (drafts.data ?? []).filter((d) => d.status !== "ditarik");
   useEffect(() => { if (!draftId && usable.length) setDraftId(usable.find((d) => d.status === "tayang")?.id ?? usable[0].id); }, [drafts.data]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (draftId) setParams({ draft: String(draftId) }, { replace: true }); setSel(null); }, [draftId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const pendingSel = useRef<number | null>(null);
+  useEffect(() => { if (draftId) setParams({ draft: String(draftId) }, { replace: true }); setSel(pendingSel.current); pendingSel.current = null; }, [draftId]); // eslint-disable-line react-hooks/exhaustive-deps
   const current = media.data?.find((m) => m.id === sel) ?? media.data?.[0] ?? null;
   const gen = (kind: string) => run(kind, async () => {
     setErr("");
@@ -270,16 +355,25 @@ export default function StudioPage() {
     } catch (e) { setErr((e as Error).message); }
   });
   const d = usable.find((x) => x.id === draftId);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const openFromGallery = (m: Media) => {
+    if (m.draft_id === draftId) setSel(m.id); else { pendingSel.current = m.id; setDraftId(m.draft_id); }
+    setTimeout(() => editorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
   return (
     <div className="stack">
       <div>
         <h1>Studio Multimedia <span className="muted" style={{ fontWeight: 400 }}>· M4 S29–S31</span></h1>
         <p className="sub" style={{ marginBottom: 0 }}>Ubah naskah menjadi infografis 4K, video pendek bertakarir dwibahasa, dan naskah audio — memakai templat identitas visual berversi</p>
       </div>
-      <div className="card stack" style={{ gap: 10 }}>
+      <MediaGallery tpls={tpls.data ?? []} onOpen={openFromGallery} />
+      <div className="card stack" style={{ gap: 10 }} ref={editorRef}>
+        <h2 style={{ margin: 0 }}>Studio produksi</h2>
         <div className="row">
           <label className="field" style={{ flex: 1, minWidth: 260 }}><span>Naskah sumber</span>
-            <select value={draftId} onChange={(e) => setDraftId(Number(e.target.value))}>{usable.map((x) => <option key={x.id} value={x.id}>#{x.id} {x.title} · {STATUS_DRAFT[x.status]}</option>)}</select></label>
+            <select value={draftId} onChange={(e) => setDraftId(Number(e.target.value))}>
+              {!!draftId && !usable.some((x) => x.id === draftId) && <option value={draftId}>#{draftId} (dibuka dari galeri)</option>}
+              {usable.map((x) => <option key={x.id} value={x.id}>#{x.id} {x.title} · {STATUS_DRAFT[x.status]}</option>)}</select></label>
           {d && <span className="small muted">{d.ai_generated ? "Dibantu SISTRA AGENT · " : ""}{d.author_name}</span>}
         </div>
         {isAuthor && (

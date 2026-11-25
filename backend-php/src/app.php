@@ -26,6 +26,7 @@ require __DIR__ . '/crud.php';
 require __DIR__ . '/seed_bulk.php';
 require __DIR__ . '/geo.php';
 require __DIR__ . '/pw_reset.php';
+require __DIR__ . '/seed_media.php';
 
 /** Migrasi M4–M7 sekali per basis data (penanda di data_dir). Data contoh hanya ditanam pada basis data demo. */
 function ensure_m47(): void
@@ -71,6 +72,20 @@ function ensure_geo(): void
     } finally { flock($lock, LOCK_UN); fclose($lock); }
 }
 
+/** Data contoh Studio Multimedia: 3 jenis keluaran untuk setiap naskah disetujui/tayang (penanda .media-v1). */
+function ensure_media(): void
+{
+    $mark = data_dir() . '/.media-v1';
+    if (is_file($mark) || !is_file(data_dir() . '/.bulk-v1') || getenv('SISTRA_SEED_DEMO') === '0') return;
+    $lock = fopen(data_dir() . '/.bulk.lock', 'c');
+    if (!flock($lock, LOCK_EX | LOCK_NB)) { fclose($lock); return; }
+    try {
+        if (is_file($mark)) return;
+        if ((int)val('SELECT COUNT(*) FROM social_accounts') === 0) { touch($mark); return; } // bukan basis data demo
+        if (seed_media(3.0)) touch($mark);
+    } finally { flock($lock, LOCK_UN); fclose($lock); }
+}
+
 /** Data demo massal (≥ 500 per fitur) ditanam bertahap ±3 dtk per permintaan baca sampai selesai (penanda .bulk-v1). */
 function ensure_bulk(): void
 {
@@ -113,7 +128,7 @@ function sistra_handle(): void
         ensure_kak();
         // Penanaman data demo massal hanya pada permintaan baca di luar proses masuk, dengan anggaran waktu kecil,
         // agar tidak pernah menahan login.
-        if ($method === 'GET' && !str_starts_with($path, '/api/auth/')) ensure_bulk();
+        if ($method === 'GET' && !str_starts_with($path, '/api/auth/')) { ensure_bulk(); ensure_media(); }
         ensure_geo();
         $len = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
         if ($len > ini_bytes((string)ini_get('post_max_size'))) fail(413, 'Permintaan melebihi batas ukuran unggah server');
