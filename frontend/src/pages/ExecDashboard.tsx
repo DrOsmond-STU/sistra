@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 import { ModeChip, Prio, StackBar, Tile, TrendColumns, TrendLegend, dueText } from "../components/kit";
 import { Msg, useLoad } from "../components/ui";
-import ProvinceMap from "../components/ProvinceMap";
 import { fmtDateTime, fmtPct, nf } from "../format";
 import { FORMAT_LABEL, type ExecSummary } from "../types47";
+import SebaranMap from "../components/geo";
 
 function ImpactCard() {
   const d = useLoad(() => api<{ national: number; issues: { name: string; score: number }[] }>("/m8/impact"), []);
@@ -107,6 +107,7 @@ export default function ExecDashboard() {
           </div>
           <TrendColumns data={data.trend} />
         </div>
+        <div className="stack">
         <div className="card stack" style={{ gap: 12 }}>
           <div className="row between"><h2 style={{ margin: 0 }}>Kesehatan 39 kanal</h2><Link to="/distribusi" className="btn sm">Distribusi →</Link></div>
           <StackBar parts={[
@@ -116,15 +117,11 @@ export default function ExecDashboard() {
           ]} />
           <div className="small muted">Uji ketersediaan disimulasikan; belum tersambung ke CMS kanal sungguhan.</div>
         </div>
+        <ImpactCard />
+        </div>
       </div>
 
-      <div className="grid g-main">
-        <div className="card">
-          <div className="row between" style={{ marginBottom: 8 }}><h2 style={{ margin: 0 }}>Peta 38 provinsi</h2><Link to="/distribusi?tab=cms" className="btn sm">Kanal →</Link></div>
-          <ProvinceMap />
-        </div>
-        <ImpactCard />
-      </div>
+      <SebaranMap title="Peta sebaran 38 provinsi" initial="artikel" days={30} />
 
       <div className="grid g2">
         <div className="card">

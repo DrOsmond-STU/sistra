@@ -251,3 +251,43 @@ tr.selected td { background: var(--accent-soft); }
 .crud-pick { display: none; }
 @media (max-width: 1100px) { .crud-layout { grid-template-columns: minmax(0, 1fr); } .crud-side { display: none; } .crud-pick { display: flex; } }
 @media print { .foot-note, .topbar { display: none !important; } }
+
+/* ---------- peta sebaran (Leaflet + klaster) ---------- */
+.geo-card { display: flex; flex-direction: column; gap: .75rem; }
+.geo-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem; flex-wrap: wrap; }
+.geo-head select { min-width: 0; }
+.geo-layers { flex-wrap: wrap; }
+.geo-body { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 1rem; align-items: start; }
+.geo-map-wrap { position: relative; }
+.geo-map { width: 100%; border-radius: .9rem; overflow: hidden; background: #aad3df; z-index: 0; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06); }
+.geo-placeholder { display: flex; align-items: center; justify-content: center; color: var(--muted); background: var(--surface-2, #eef1f6); }
+.geo-map.leaflet-container { font-family: inherit; background: #aad3df; }
+.geo-loading { position: absolute; top: .6rem; left: 50%; transform: translateX(-50%); background: var(--surface); color: var(--text); padding: .2rem .7rem; border-radius: 1rem; box-shadow: var(--shadow); z-index: 500; }
+.geo-legend { position: absolute; left: .6rem; bottom: .6rem; z-index: 500; display: flex; flex-wrap: wrap; gap: .25rem .7rem; background: rgba(255, 255, 255, .92); color: #344767; padding: .35rem .6rem; border-radius: .6rem; box-shadow: 0 2px 8px rgba(0, 0, 0, .12); max-width: calc(100% - 1.2rem); }
+.geo-legend span { display: inline-flex; align-items: center; gap: .3rem; }
+.geo-legend .geo-dot { width: 10px; height: 10px; }
+.geo-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .35); box-sizing: border-box; }
+.geo-dot.big { width: 18px; height: 18px; border-width: 3px; }
+.geo-dot.tone-good { background: #5fb81a; }
+.geo-dot.tone-info { background: #1a8fe3; }
+.geo-dot.tone-warn { background: #f5a623; }
+.geo-dot.tone-bad { background: #ea0606; }
+.geo-dot.tone-muted { background: #8392ab; }
+.geo-pop { display: flex; flex-direction: column; gap: .25rem; font-family: "Open Sans", system-ui, sans-serif; color: #344767; }
+.geo-pop b { font-size: .85rem; line-height: 1.3; }
+.geo-pop .btn { align-self: flex-start; margin-top: .3rem; }
+.geo-map .leaflet-popup-content-wrapper { border-radius: .75rem; box-shadow: 0 8px 26px -4px rgba(20, 20, 20, .25); }
+.geo-map .marker-cluster div { font-family: inherit; font-weight: 700; color: #344767; }
+.geo-side { display: flex; flex-direction: column; gap: .5rem; }
+.geo-stats { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.geo-stats > div { display: flex; flex-direction: column; background: var(--surface-2, rgba(0, 0, 0, .03)); border-radius: .75rem; padding: .55rem .7rem; }
+.geo-stats b { font-size: 1.25rem; color: var(--text); }
+.geo-top { display: flex; flex-direction: column; gap: .15rem; }
+.geo-top-row { all: unset; box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr) 64px 34px; align-items: center; gap: .5rem; padding: .3rem .4rem; border-radius: .5rem; cursor: pointer; font-size: .8rem; color: var(--text); }
+.geo-top-row:hover, .geo-top-row:focus-visible { background: var(--surface-2, rgba(0, 0, 0, .04)); outline: none; }
+.geo-top-row b { text-align: right; }
+.geo-top-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.geo-top-bar { height: 6px; border-radius: 3px; background: var(--grid, rgba(0, 0, 0, .08)); overflow: hidden; }
+.geo-top-bar span { display: block; height: 100%; border-radius: 3px; background: var(--grad-info, linear-gradient(310deg, #2152ff, #21d4fd)); }
+@media (max-width: 1100px) { .geo-body { grid-template-columns: minmax(0, 1fr); } .geo-top { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); } }
+@media (max-width: 640px) { .geo-map { height: 320px !important; } }

@@ -7,6 +7,7 @@ import { Tile, useBusy } from "../components/kit";
 import { Msg, useLoad } from "../components/ui";
 import { STATUS_DRAFT, fmtDateTime, nf, relTime } from "../format";
 import { FORMAT_LABEL, HEALTH_LABEL, type Card, type ChannelInfo, type Distribution } from "../types47";
+import SebaranMap from "../components/geo";
 
 type Scope = "semua" | "nasional" | "pilih";
 const HCOLOR: Record<string, string> = { normal: "var(--st-good)", lambat: "var(--st-warning)", gangguan: "var(--st-critical)" };
@@ -78,6 +79,7 @@ export default function DistributionPage() {
       </div>
       <Msg kind="warn">Purwarupa: pengiriman ke CMS kanal dan uji ketersediaan masih <b>disimulasikan</b>. Tautan hasil memakai domain contoh.</Msg>
       {msg && <Msg kind={msg.kind}>{msg.text}</Msg>}
+      <SebaranMap title="Sebaran artikel di 39 wilayah" layers={["artikel", "kanal", "mitra"]} initial="artikel" days={30} height={380} />
       <div className="tabs" role="tablist">
         {([["salur", "Salurkan (S50)"], ["cms", "Kanal & CMS (S49)"], ["jadwal", "Jadwal cerdas (S51)"], ["paket", "Metadata & format (S52)"], ["pers", "Portal media (S53)"],
           ...(hasRole("admin") ? [["api", "API mitra (S54)"]] : []), ["uptime", "Uptime (S55)"]] as [string, string][]).map(([k, v]) => (

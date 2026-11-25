@@ -12,6 +12,7 @@ interface NavItem { to: string; label: string; icon: string; code?: string; role
 // sudah dikelola aplikasi lain. Fokus SISTRA: M4–M8 + data & CRUD + asisten AI.
 const NAV: NavItem[] = [
   { to: "/", label: "Dashboard Eksekutif", icon: "ni-tv-2", group: "Ringkasan" },
+  { to: "/peta", label: "Peta Sebaran", icon: "ni-map-big" },
   { to: "/analitik", label: "Dashboard Analitik", icon: "ni-chart-bar-32", code: "M8" },
   { to: "/laporan", label: "Laporan Berkala", icon: "ni-single-copy-04", code: "M8" },
   { to: "/kak", label: "Matriks Kepatuhan KAK", icon: "ni-check-bold" },

@@ -43,8 +43,55 @@ def test_crud_on_large_tables(db_bulk, client, login):
     ("/api/m6/accounts", "operator"), ("/api/m6/campaigns", "redaktur"), ("/api/m6/comments?status=terbuka", "operator"), ("/api/m7/channels", "operator"),
     ("/api/m7/uptime", "operator"), ("/api/m8/impact", "pimpinan"), ("/api/ai/quality", "pimpinan"), ("/api/reports", "pimpinan"), ("/api/m5/assets", "redaktur"),
     ("/api/m6/partners", "redaktur"), ("/api/m7/press-packs", "operator"), ("/api/m7/api-clients", "admin"),
+    ("/api/geo/points?layer=artikel", "pimpinan"), ("/api/geo/points?layer=mitra", "redaktur"),
 ])
 def test_pages_ok_with_bulk_data(db_bulk, client, login, path, user):
     r = client.get(path, headers=login(user))
     assert r.status_code == 200, r.text[:200]
     assert r.elapsed.total_seconds() < 3
+
+
+LAYERS = ["artikel", "naskah", "liputan", "kanal", "akun", "mitra"]
+
+
+def test_geo_map_layers(db_bulk, client, login):
+    """Peta sebaran: semua lapisan berisi titik di wilayah Indonesia dan tersebar di 38 provinsi."""
+    h = login("pimpinan")
+    assert [x["key"] for x in client.get("/api/geo/layers", headers=h).json()] == LAYERS
+    for layer in LAYERS:
+        r = client.get("/api/geo/points", headers=h, params={"layer": layer})
+        assert r.status_code == 200, r.text
+        d = r.json()
+        assert d["points"], layer
+        assert d["provinces_covered"] == 38, (layer, d["provinces_covered"])
+        for p in d["points"]:
+            assert -11.5 < p["lat"] < 6.5 and 94.5 < p["lng"] < 141.5, p
+            assert p["link"].startswith("/") and p["tone"] in {"good", "info", "warn", "bad", "muted"}
+        if layer != "kanal":
+            assert sum(x["count"] for x in d["by_province"]) == len(d["points"])
+            assert len(d["points"]) >= 100, (layer, len(d["points"]))
+    assert len(client.get("/api/geo/points", headers=h, params={"layer": "kanal"}).json()["points"]) == 38
+
+
+def test_geo_map_filters_and_guards(db_bulk, client, login):
+    h = login("analis")
+    full = client.get("/api/geo/points", headers=h, params={"layer": "artikel"}).json()
+    week = client.get("/api/geo/points", headers=h, params={"layer": "artikel", "days": 7}).json()
+    assert len(week["points"]) <= len(full["points"])
+    iss = client.get("/api/issues", headers=h).json()[0]["id"]
+    one = client.get("/api/geo/points", headers=h, params={"layer": "naskah", "issue_id": iss}).json()
+    allp = client.get("/api/geo/points", headers=h, params={"layer": "naskah"}).json()
+    assert one["total"] < allp["total"]
+    assert client.get("/api/geo/points", headers=h, params={"layer": "rahasia"}).status_code == 422
+    assert client.get("/api/geo/points", headers=h, params={"layer": "artikel", "days": "x"}).status_code == 422
+    assert client.get("/api/geo/points", params={"layer": "artikel"}).status_code == 401
+
+
+def test_geo_local_articles_stay_in_their_province(db_bulk, client, login):
+    """Naskah bermuatan lokal hanya tayang di kanal provinsinya sendiri (selain kanal nasional)."""
+    from sqlalchemy import text
+    from conftest import engine
+    with engine.connect() as c:
+        bad = c.execute(text("""SELECT COUNT(*) FROM distributions d JOIN channels ch ON ch.id = d.channel_id JOIN drafts r ON r.id = d.draft_id
+                                WHERE r.province_code IS NOT NULL AND ch.type = 'provinsi' AND ch.province_code <> r.province_code""")).scalar()
+    assert bad == 0

@@ -5,6 +5,7 @@ import { EngagementTab, ImpactTab, QualityTab } from "./AnalyticsKak";
 import { Msg, useLoad } from "../components/ui";
 import { STATUS_DRAFT, fmtPct, nf } from "../format";
 import { AI_FEATURE_LABEL, CATEGORY_LABEL, COMMENT_STATUS, FORMAT_LABEL, HEALTH_LABEL, type Analytics } from "../types47";
+import SebaranMap from "../components/geo";
 
 const TABS = [
   ["m4", "M4 · Produksi"], ["m5", "M5 · Editorial"], ["m6", "M6 · Kanal resmi"], ["m7", "M7 · Distribusi"], ["eng", "Keterlibatan per jam (S56)"],
@@ -39,6 +40,8 @@ export default function AnalyticsPage() {
             <Tile label="Distribusi kanal web" value={nf.format(data.distribution.sent)} foot={`${nf.format(data.distribution.views)} tayangan · ${data.distribution.failed} gagal`} />
             <Tile label="Respons komentar" value={`${data.social.avg_reply_hours} jam`} foot={`${data.social.replied} dibalas · ${data.social.within_sla} dalam SLA 2 jam`} />
           </div>
+
+          <SebaranMap title="Sebaran artikel & kanal" layers={["artikel", "naskah", "kanal", "akun"]} initial="artikel" days={days} key={days} height={380} />
 
           <div className="tabs" role="tablist">
             {TABS.map(([id, label]) => <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "on" : ""} onClick={() => setTab(id)}>{label}</button>)}

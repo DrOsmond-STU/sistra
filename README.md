@@ -112,6 +112,7 @@ Hasil saat ini: **55 uji lulus** di SQLite dan PostgreSQL 16, cakupan **90%**. U
 
 - **Tema**: Soft UI Dashboard Tailwind v1.0.0 (Creative Tim, lisensi MIT, salinan lisensi di `frontend/public/theme/LICENSE-soft-ui-dashboard.txt`). Token warna, gradien, bayangan lembut, ikon Nucleo, sidebar mengambang, navbar kaca, dan halaman masuk mengikuti tema tersebut (`frontend/src/theme/`); mode gelap dan tampilan ponsel tetap didukung.
 - **Data & CRUD** (`/data`): 27 entitas Modul 4–8 dengan tambah, lihat, ubah, hapus, cari, saring, urut, halaman, dan ekspor CSV. Hak akses per peran dan aturan bisnis tetap berlaku; setiap perubahan tercatat di jejak audit.
+- **Peta sebaran** (`/peta`, juga di Dashboard Eksekutif, Analitik, Distribusi, Kanal Medsos Resmi, Liputan, dan Konteks Lokal): peta interaktif Indonesia (Leaflet + OpenStreetMap) dengan klaster berwarna hijau/kuning/oranye. Lapisan: artikel tayang, naskah lokal, liputan, kanal web, akun medsos, mitra media & KOL; saring per periode dan isu; klik titik untuk membuka datanya. Bila jaringan memblokir peta dasar OSM, ditampilkan garis pantai sederhana (Natural Earth, domain publik).
 - **Data demo**: ≥ 500 baris per fitur (data master seperti 12 isu, 39 kanal sesuai KAK, dan templat visual sengaja tidak digandakan). Di server, data massal diisi otomatis secara bertahap pada beberapa muatan halaman pertama.
 
 ## Struktur

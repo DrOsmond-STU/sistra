@@ -5,6 +5,7 @@ import { useAuth } from "../auth";
 import { Msg, useLoad } from "../components/ui";
 import { fmtDate, fmtDateTime, fmtSize, toLocalInput } from "../format";
 import type { Draft } from "../types";
+import SebaranMap from "../components/geo";
 
 interface Asset { id: number; kind: string; title: string; filename: string; mime: string; size: number; sha256: string; tags: string[]; ai_tags: string[]; description: string; credit: string;
   license: string; license_label: string; license_expires_at: string | null; license_state: string; issue_code: string | null; used_in: number; author_name: string; created_at: string }
@@ -211,7 +212,7 @@ export default function AssetsPage() {
       </div>
       {tab === "aset" && <Bank />}
       {tab === "templat" && <Templates />}
-      {tab === "liputan" && <Coverage />}
+      {tab === "liputan" && <><SebaranMap title="Sebaran liputan lapangan" layers={["liputan"]} days={0} height={360} /><Coverage /></>}
     </div>
   );
 }

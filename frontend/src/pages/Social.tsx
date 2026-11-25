@@ -7,6 +7,7 @@ import { ModeChip, Prio, Tile, dueText, useBusy } from "../components/kit";
 import { Msg, useLoad } from "../components/ui";
 import { fmtDateTime, nf, relTime, toLocalInput } from "../format";
 import { CATEGORY_LABEL, COMMENT_STATUS, FORMAT_LABEL, type Account, type Card, type KbEntry, type PostTask, type SocialComment } from "../types47";
+import SebaranMap from "../components/geo";
 
 type Tab = "komentar" | "tugas" | "akun" | "bahan" | "paket" | "kampanye" | "mitra";
 type Note = { kind: "ok" | "error" | "warn"; text: string } | null;
@@ -355,6 +356,7 @@ export default function SocialPage() {
         <Tile label="Komentar belum ditangani" value={totals.comments} tone={totals.comments ? "bad" : undefined} />
         <Tile label="Akun tanpa MFA" value={totals.noMfa} tone={totals.noMfa ? "bad" : "good"} foot="wajib MFA untuk akun resmi" />
       </div>
+      <SebaranMap title="Sebaran akun resmi & mitra" layers={["akun", "mitra"]} initial="akun" height={360} />
       {msg && <Msg kind={msg.kind}>{msg.text}</Msg>}
       <div className="tabs" role="tablist">
         {([["komentar", "Kotak masuk (S43)"], ["paket", "Paket respons cepat (S41)"], ["tugas", "Tugas unggah (S45)"], ["kampanye", "Kampanye (S44, S48)"], ["mitra", "Mitra KOL (S42)"], ["akun", "Akun & kuota (S40)"], ["bahan", "Bahan respons"]] as [Tab, string][]).map(([k, v]) => (

@@ -14,6 +14,7 @@ import StudioPage from "./pages/Studio";
 import AnalyticsPage from "./pages/Analytics";
 import DistributionPage from "./pages/Distribution";
 import DataCrudPage from "./pages/DataCrud";
+import MapPage from "./pages/MapPage";
 import DraftsPage from "./pages/Drafts";
 import EditorialPage from "./pages/Editorial";
 import ExecDashboard from "./pages/ExecDashboard";
@@ -47,6 +48,7 @@ function Guarded() {
         <Route path="aset" element={<AssetsPage />} />
         <Route path="laporan" element={<ReportsPage />} />
         <Route path="kak" element={<KakMatrix />} />
+        <Route path="peta" element={<MapPage />} />
         <Route path="data" element={<DataCrudPage />} />
         <Route path="data/:entity" element={<DataCrudPage />} />
         <Route path="kanal-resmi" element={<SocialPage />} />

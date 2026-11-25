@@ -354,12 +354,15 @@ function bulk_step(string $s): void
             break;
 
         case 'distributions':
-            $drafts = all("SELECT id, published_at FROM drafts WHERE status IN ('tayang','ditarik') AND id NOT IN (SELECT DISTINCT draft_id FROM distributions) ORDER BY id DESC LIMIT 200");
+            $drafts = all("SELECT id, published_at, province_code FROM drafts WHERE status IN ('tayang','ditarik') AND id NOT IN (SELECT DISTINCT draft_id FROM distributions) ORDER BY id DESC LIMIT 200");
             $made = 0;
             foreach ($drafts as $k => $d) {
                 if ($made >= $N + 200) break;
                 $sentTs = (float)ts_from_iso($d['published_at'] ?? bulk_at(100));
-                $pick = $k % 3 === 0 ? $C['channels'] : array_slice($C['channels'], $k % 30, 6 + $k % 9);
+                // Naskah bermuatan lokal hanya tayang di kanal nasional + kanal provinsinya sendiri.
+                $pick = !empty($d['province_code'])
+                    ? array_values(array_filter($C['channels'], fn($c) => $c['type'] === 'nasional' || $c['province_code'] === $d['province_code']))
+                    : ($k % 3 === 0 ? $C['channels'] : array_slice($C['channels'], $k % 30, 6 + $k % 9));
                 foreach ($pick as $c) {
                     $fail = $c['health'] === 'gangguan' && $k % 2 === 0; $views = $fail ? 0 : (int)(($c['type'] === 'nasional' ? 8 : 1) * mt_rand(400, 7000));
                     insert('distributions', ['draft_id' => $d['id'], 'channel_id' => $c['id'], 'status' => $fail ? 'gagal' : 'terkirim', 'sent_at' => $fail ? null : iso_from_ts($sentTs + mt_rand(5, 600)),
