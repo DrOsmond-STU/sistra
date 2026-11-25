@@ -134,4 +134,4 @@ def test_bank_aset_real_photos(db_bulk, client, login):
     assert f.status_code == 200 and f.headers["content-type"] == "image/jpeg" and f.content[:3] == b"\xff\xd8\xff"
     svg = client.get("/api/m5/assets", headers=h, params={"media": "grafis"}).json()["items"]
     assert svg and all(a["mime"] == "image/svg+xml" for a in svg)
-    assert len({a["province_code"] for a in photos if a["province_code"]}) >= 20
+    assert len({a["province_name"] for a in photos if a["province_name"]}) >= 20
