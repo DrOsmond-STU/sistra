@@ -68,6 +68,8 @@ export default function GeoMap({ layers = ["artikel", "naskah", "liputan", "kana
     m.fitBounds(INDONESIA);
     let failed = 0;
     const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      // OSM mewajibkan header Referer; halaman ini bawaannya no-referrer, jadi ubin peta mengirim asal situs saja (tanpa jalur halaman).
+      referrerPolicy: "strict-origin",
       maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>',
     }).addTo(m);
     // Bila peta dasar diblokir jaringan, tampilkan garis pantai sederhana (Natural Earth) agar peta tetap terbaca.
