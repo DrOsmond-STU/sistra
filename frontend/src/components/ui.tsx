@@ -86,3 +86,28 @@ export function useWidth<T extends HTMLElement>(): [React.RefObject<T>, number] 
   }, []);
   return [ref, w];
 }
+
+/** Salin teks ke papan klip; bila izin ditolak/tidak tersedia, pakai cara cadangan (seleksi + execCommand). */
+export async function copyText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; }
+  } catch { /* lanjut ke cadangan */ }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch { return false; }
+}
+
+/** Tombol salin dengan umpan balik singkat. */
+export function CopyButton({ text, label = "Salin", className = "sm" }: { text: string; label?: string; className?: string }) {
+  const [state, setState] = useState<"" | "ok" | "fail">("");
+  return (
+    <button type="button" className={className} disabled={!text} onClick={async () => { setState((await copyText(text)) ? "ok" : "fail"); setTimeout(() => setState(""), 1800); }}>
+      {state === "ok" ? "✓ Tersalin" : state === "fail" ? "Pilih & salin manual" : label}
+    </button>
+  );
+}

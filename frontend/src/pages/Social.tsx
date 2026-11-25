@@ -4,7 +4,7 @@ import { CampaignsTab, PacksTab, PartnersTab, QuotaPanel, ThreadView } from "./S
 import { api } from "../api";
 import { useAuth } from "../auth";
 import { ModeChip, Prio, Tile, dueText, useBusy } from "../components/kit";
-import { Msg, useLoad } from "../components/ui";
+import { Msg, useLoad, CopyButton } from "../components/ui";
 import { fmtDateTime, nf, relTime, toLocalInput } from "../format";
 import { CATEGORY_LABEL, COMMENT_STATUS, FORMAT_LABEL, type Account, type Card, type KbEntry, type PostTask, type SocialComment } from "../types47";
 import SebaranMap from "../components/geo";
@@ -53,7 +53,7 @@ function CommentCard({ c, canReply, canTriage, onChange }: { c: SocialComment; c
           <Msg kind="error">{err}</Msg>
           <div className="row">
             {canTriage && <button className="sm" disabled={!!busy} onClick={() => call("sg", `/m6/comments/${c.id}/suggest`)}>{busy === "sg" ? "Menyusun…" : "✦ Saran balasan SISTRA AGENT"}</button>}
-            {canReply && <button className="sm" disabled={!reply.trim()} onClick={() => navigator.clipboard?.writeText(reply)}>Salin</button>}
+            {canReply && <CopyButton text={reply.trim() ? reply : ""} />}
             {canReply && <button className="sm primary" disabled={!!busy || reply.trim().length < 2} onClick={() => call("rp", `/m6/comments/${c.id}/reply`, { text: reply })}>Tandai sudah dibalas</button>}
             {canTriage && <button className="sm" disabled={!!busy} onClick={() => call("es", `/m6/comments/${c.id}/status`, { status: "dieskalasi" })}>Eskalasi</button>}
             {canTriage && <button className="sm ghost" disabled={!!busy} onClick={() => call("ab", `/m6/comments/${c.id}/status`, { status: "diabaikan" })}>Abaikan</button>}
@@ -230,7 +230,7 @@ function TasksTab({ accounts, setMsg }: { accounts: Account[]; setMsg: (n: Note)
                 <td style={{ minWidth: 220 }}>
                   {t.status === "menunggu" && (
                     <div className="stack" style={{ gap: 6 }}>
-                      <button className="sm" onClick={() => navigator.clipboard?.writeText(t.caption)}>Salin caption</button>
+                      <CopyButton text={t.caption} label="Salin caption" />
                       {canPost && (
                         <div className="row" style={{ gap: 4 }}>
                           <input style={{ flex: 1, minWidth: 120 }} placeholder="https://tautan-unggahan" value={urls[t.id] ?? ""} onChange={(e) => setUrls({ ...urls, [t.id]: e.target.value })} aria-label="Tautan unggahan" />

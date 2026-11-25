@@ -6,7 +6,7 @@ import type { Draft } from "../types";
 import type { EditorialResult } from "../types47";
 import { EditorialReport, ModeChip, useBusy } from "./kit";
 import PlatformPreview from "./PlatformPreview";
-import { Msg, useLoad } from "./ui";
+import { Msg, useLoad, CopyButton } from "./ui";
 
 const REWRITES = [
   "Persingkat menjadi maksimal 80 kata",
@@ -133,7 +133,7 @@ export default function DraftTools({ draft, onChanged }: { draft: DraftWithEdito
               <div className="body-text" style={{ maxHeight: 220 }}>{rewrite.text}</div>
               <div className="row">
                 {canApply && <button className="sm primary" disabled={!!busy} onClick={() => save(draft.title, rewrite.text, "Hasil tulis ulang disimpan sebagai revisi baru.")}>Simpan sebagai revisi</button>}
-                <button className="sm" onClick={() => navigator.clipboard?.writeText(rewrite.text)}>Salin</button>
+                <CopyButton text={rewrite.text} />
                 <button className="sm ghost" onClick={() => setRewrite(null)}>Buang</button>
               </div>
             </div>

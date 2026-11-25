@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import { useBusy } from "../components/kit";
-import { Msg, useLoad } from "../components/ui";
+import { Msg, useLoad, CopyButton } from "../components/ui";
 import { fmtDateTime, fmtSize, nf, relTime } from "../format";
 import type { Card } from "../types47";
 
@@ -200,7 +200,7 @@ export function PressTab({ setMsg }: { setMsg: (n: Note) => void }) {
           <div className="row"><select value={draft} onChange={(e) => setDraft(Number(e.target.value))} aria-label="Naskah"><option value={0}>Pilih naskah disetujui…</option>{ready.data?.map((d) => <option key={d.id} value={d.id}>#{d.id} {d.title}</option>)}</select>
             <button className="primary" disabled={!draft || !sel.length} onClick={make}>Buat paket & tautan ({sel.length} media)</button></div>
           <div className="row">{partners.data?.map((p) => <label key={p.id} className="row small" style={{ gap: 4 }}><input type="checkbox" checked={sel.includes(p.id)} onChange={(e) => setSel(e.target.checked ? [...sel, p.id] : sel.filter((x) => x !== p.id))} />{p.name} <span className="muted">({p.type})</span></label>)}</div>
-          {!!links.length && <div className="stack" style={{ gap: 4 }}>{links.map((l) => <div key={l.path} className="small"><b>{l.partner}</b>: <span className="mono">{window.location.origin}{l.path}</span> <button className="sm ghost" onClick={() => navigator.clipboard?.writeText(window.location.origin + l.path)}>Salin</button></div>)}</div>}
+          {!!links.length && <div className="stack" style={{ gap: 4 }}>{links.map((l) => <div key={l.path} className="small"><b>{l.partner}</b>: <span className="mono">{window.location.origin}{l.path}</span> <CopyButton className="sm ghost" text={window.location.origin + l.path} /></div>)}</div>}
         </div>
       )}
       <div className="split">
@@ -238,7 +238,7 @@ export function ApiTab({ setMsg }: { setMsg: (n: Note) => void }) {
         <label className="field"><span>Batas laju / menit</span><input type="number" value={f.rate_per_min} onChange={(e) => setF({ ...f, rate_per_min: Number(e.target.value) })} /></label>
         <label className="field"><span>Masa berlaku (hari)</span><input type="number" value={f.days} onChange={(e) => setF({ ...f, days: Number(e.target.value) })} /></label>
         <div className="full"><button className="primary" disabled={f.name.length < 3 || f.org.length < 2} onClick={create}>Terbitkan token</button></div>
-        {token && <div className="full alert-msg warn"><b>Token (sekali tampil):</b> <span className="mono" style={{ wordBreak: "break-all" }}>{token}</span> <button className="sm" onClick={() => navigator.clipboard?.writeText(token)}>Salin</button>
+        {token && <div className="full alert-msg warn"><b>Token (sekali tampil):</b> <span className="mono" style={{ wordBreak: "break-all" }}>{token}</span> <CopyButton text={token} />
           <div className="small mono" style={{ marginTop: 6 }}>curl -H "Authorization: Bearer {token.slice(0, 10)}…" {origin}/api/public/v1/publications?limit=5</div></div>}
       </div>
       <div className="card table-wrap">
