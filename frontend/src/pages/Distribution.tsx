@@ -79,7 +79,7 @@ export default function DistributionPage() {
       </div>
       <Msg kind="warn">Purwarupa: pengiriman ke CMS kanal dan uji ketersediaan masih <b>disimulasikan</b>. Tautan hasil memakai domain contoh.</Msg>
       {msg && <Msg kind={msg.kind}>{msg.text}</Msg>}
-      <SebaranMap title="Sebaran artikel di 39 wilayah" layers={["artikel", "kanal", "mitra"]} initial="artikel" days={30} height={380} />
+      <SebaranMap title="Sebaran artikel di 39 wilayah" layers={["artikel", "kanal", "mitra"]} initial="artikel" height={380} />
       <div className="tabs" role="tablist">
         {([["salur", "Salurkan (S50)"], ["cms", "Kanal & CMS (S49)"], ["jadwal", "Jadwal cerdas (S51)"], ["paket", "Metadata & format (S52)"], ["pers", "Portal media (S53)"],
           ...(hasRole("admin") ? [["api", "API mitra (S54)"]] : []), ["uptime", "Uptime (S55)"]] as [string, string][]).map(([k, v]) => (

@@ -168,7 +168,7 @@ export default function ProductionPage() {
         <button role="tab" aria-selected={params.get("tab") !== "lokal"} className={params.get("tab") !== "lokal" ? "on" : ""} onClick={() => setParams({}, { replace: true })}>Brief & variasi (S26–S27)</button>
         <button role="tab" aria-selected={params.get("tab") === "lokal"} className={params.get("tab") === "lokal" ? "on" : ""} onClick={() => setParams({ tab: "lokal" }, { replace: true })}>Basis konteks lokal 38 provinsi (S28)</button>
       </div>
-      {params.get("tab") === "lokal" ? <><SebaranMap title="Sebaran naskah bermuatan lokal" layers={["naskah", "artikel"]} initial="naskah" days={90} height={360} /><LocalContext /></> : <>
+      {params.get("tab") === "lokal" ? <><SebaranMap title="Sebaran naskah bermuatan lokal" layers={["naskah", "artikel"]} initial="naskah" height={360} /><LocalContext /></> : <>
       {ai?.mode === "simulasi" && <Msg kind="warn">SISTRA AGENT berjalan dalam <b>mode simulasi</b> (kunci API SISTRA AGENT belum diisi). Fitur tetap bisa dicoba; hasil berasal dari templat. {hasRole("admin") && <Link to="/pengaturan-agent">Isi kunci API →</Link>}</Msg>}
       {msg && <Msg kind={msg.kind}>{msg.text}</Msg>}
 

@@ -41,7 +41,7 @@ export default function AnalyticsPage() {
             <Tile label="Respons komentar" value={`${data.social.avg_reply_hours} jam`} foot={`${data.social.replied} dibalas · ${data.social.within_sla} dalam SLA 2 jam`} />
           </div>
 
-          <SebaranMap title="Sebaran artikel & kanal" layers={["artikel", "naskah", "kanal", "akun"]} initial="artikel" days={days} key={days} height={380} />
+          <SebaranMap title="Sebaran artikel & kanal" layers={["artikel", "naskah", "kanal", "akun"]} initial="artikel" height={380} />
 
           <div className="tabs" role="tablist">
             {TABS.map(([id, label]) => <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "on" : ""} onClick={() => setTab(id)}>{label}</button>)}

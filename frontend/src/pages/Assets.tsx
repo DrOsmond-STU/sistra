@@ -212,7 +212,7 @@ export default function AssetsPage() {
       </div>
       {tab === "aset" && <Bank />}
       {tab === "templat" && <Templates />}
-      {tab === "liputan" && <><SebaranMap title="Sebaran liputan lapangan" layers={["liputan"]} days={0} height={360} /><Coverage /></>}
+      {tab === "liputan" && <><SebaranMap title="Sebaran liputan lapangan" layers={["liputan"]} height={360} /><Coverage /></>}
     </div>
   );
 }

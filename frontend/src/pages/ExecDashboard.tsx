@@ -121,7 +121,7 @@ export default function ExecDashboard() {
         </div>
       </div>
 
-      <SebaranMap title="Peta sebaran 38 provinsi" initial="artikel" days={30} />
+      <SebaranMap title="Peta sebaran 38 provinsi" initial="artikel" />
 
       <div className="grid g2">
         <div className="card">

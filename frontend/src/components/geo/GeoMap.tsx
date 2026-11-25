@@ -27,7 +27,7 @@ const NATIONAL: Record<GeoLayer, string> = {
   artikel: "di kanal nasional/medsos", naskah: "naskah nasional (tanpa wilayah)", liputan: "tanpa wilayah", kanal: "kanal nasional & medsos resmi",
   akun: "akun nasional", mitra: "berskala nasional",
 };
-const PERIODS: [number, string][] = [[7, "7 hari"], [30, "30 hari"], [90, "90 hari"], [0, "Semua"]];
+const PERIODS: [number, string][] = [[0, "Semua waktu"], [7, "7 hari"], [30, "30 hari"], [90, "90 hari"]];
 const DATED: GeoLayer[] = ["artikel", "naskah", "liputan"];
 const BY_ISSUE: GeoLayer[] = ["artikel", "naskah"];
 const INDONESIA: L.LatLngBoundsExpression = [[-11.2, 94.8], [6.3, 141.1]];
@@ -44,7 +44,7 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, text?: s
  * Klaster berwarna hijau/kuning/oranye sesuai jumlah titik; klik klaster untuk memperbesar,
  * klik titik untuk melihat ringkasan dan membuka datanya.
  */
-export default function GeoMap({ layers = ["artikel", "naskah", "liputan", "kanal", "akun", "mitra"], initial, title = "Peta sebaran", height = 420, days: daysIn = 30, note }:
+export default function GeoMap({ layers = ["artikel", "naskah", "liputan", "kanal", "akun", "mitra"], initial, title = "Peta sebaran", height = 420, days: daysIn = 0, note }:
   { layers?: GeoLayer[]; initial?: GeoLayer; title?: string; height?: number; days?: number; note?: string }) {
   const nav = useNavigate();
   const [layer, setLayer] = useState<GeoLayer>(initial ?? layers[0]);
