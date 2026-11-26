@@ -1,11 +1,12 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { api, getToken } from "../api";
+import { api } from "../api";
 import { useAuth } from "../auth";
 import { Msg, useLoad } from "../components/ui";
 import { fmtDate, fmtDateTime, fmtSize, toLocalInput } from "../format";
 import type { Draft } from "../types";
 import SebaranMap from "../components/geo";
+import AssetImage from "../components/AssetImage";
 
 interface Asset { id: number; kind: string; title: string; filename: string; mime: string; size: number; sha256: string; tags: string[]; ai_tags: string[]; description: string; credit: string;
   license: string; license_label: string; license_expires_at: string | null; license_state: string; issue_code: string | null; used_in: number; author_name: string; created_at: string }
@@ -13,19 +14,6 @@ interface AssetResp { items: Asset[]; stats: { total: number; expiring: number; 
 interface Tpl { id: number; code: string; name: string; kind: string; version: number; spec: Record<string, string>; locked: boolean; is_current: boolean; note: string; author_name: string; created_at: string; versions?: number }
 interface Cov { id: number; title: string; event_at: string; location: string; province_name: string | null; reporter_id: number | null; reporter_name: string | null; status: string; brief: string; brief_id: number | null; assets: Asset[] }
 const STATE: Record<string, [string, string]> = { aktif: ["Aktif", "muted"], segera_kedaluwarsa: ["Segera kedaluwarsa", "status-warn"], kedaluwarsa: ["Kedaluwarsa", "status-bad"] };
-
-/** Muat berkas aset dengan token (img tidak dapat mengirim header Authorization). */
-function AssetThumb({ a }: { a: Asset }) {
-  const [src, setSrc] = useState<string>("");
-  useEffect(() => {
-    if (!a.mime.startsWith("image/")) return;
-    let url = ""; let live = true;
-    fetch(`/api/m5/assets/${a.id}/file`, { headers: { Authorization: `Bearer ${getToken()}` } }).then((r) => r.blob()).then((b) => { if (live) { url = URL.createObjectURL(b); setSrc(url); } }).catch(() => undefined);
-    return () => { live = false; if (url) URL.revokeObjectURL(url); };
-  }, [a.id, a.mime]);
-  return src ? <img src={src} alt={a.title} style={{ width: "100%", aspectRatio: "1.9", objectFit: "cover", borderRadius: 6, background: "var(--surface-2)" }} />
-    : <div style={{ width: "100%", aspectRatio: "1.9", borderRadius: 6, background: "var(--surface-2)", display: "grid", placeItems: "center" }} className="muted">{a.kind}</div>;
-}
 
 function Bank() {
   const { hasRole } = useAuth();
@@ -85,7 +73,7 @@ function Bank() {
       <div className="grid g4">
         {data.data?.items.map((a) => (
           <div key={a.id} className="card stack" style={{ gap: 6, padding: 10 }}>
-            <AssetThumb a={a} />
+            <AssetImage id={a.id} sha={a.sha256} mime={a.mime} kind={a.kind} title={a.title} />
             <b style={{ fontSize: 13 }}>{a.title}</b>
             <div className="tags">{[...a.tags, ...a.ai_tags.map((t) => `✦${t}`)].slice(0, 7).map((t) => <span key={t}>{t}</span>)}</div>
             <div className="small"><span className={STATE[a.license_state][1]}>{a.license_label} · {STATE[a.license_state][0]}</span>{a.license_expires_at && <span className="muted"> · s.d. {fmtDate(a.license_expires_at)}</span>}</div>

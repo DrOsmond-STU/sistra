@@ -320,8 +320,14 @@ function register_routes_kak(Router $r): void
     $r->add('GET', '/api/m5/assets/(\d+)/file', function ($id) {
         current_user();
         $a = one('SELECT * FROM assets WHERE id = ?', [(int)$id]); if (!$a || !$a['sha256']) fail(404, 'Aset tidak ditemukan');
-        $data = blob_get($a['sha256']);
-        header('Content-Type: ' . ($a['mime'] ?: 'application/octet-stream'));
+        // Isi berkas tidak pernah berubah (alamat = sha256), jadi peramban boleh menyimpannya; hemat proses hosting.
+        $w = qparam('w') !== null ? qint('w', 480, 120, 1600) : 0;
+        $etag = '"' . substr($a['sha256'], 0, 32) . ($w ? "-w$w" : '') . '"';
+        header('Cache-Control: private, max-age=31536000, immutable');
+        header('ETag: ' . $etag);
+        if (trim((string)($_SERVER['HTTP_IF_NONE_MATCH'] ?? '')) === $etag) { http_response_code(304); return; }
+        [$data, $mime] = $w ? asset_thumb($a, $w) : [blob_get($a['sha256']), $a['mime']];
+        header('Content-Type: ' . ($mime ?: 'application/octet-stream'));
         header('Content-Security-Policy: sandbox; default-src \'none\'; style-src \'unsafe-inline\'; img-src data:');
         header("Content-Disposition: inline; filename*=UTF-8''" . rawurlencode($a['filename'] ?: 'aset'));
         header('Content-Length: ' . strlen($data));

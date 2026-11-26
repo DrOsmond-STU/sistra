@@ -135,3 +135,33 @@ def test_bank_aset_real_photos(db_bulk, client, login):
     svg = client.get("/api/m5/assets", headers=h, params={"media": "grafis"}).json()["items"]
     assert svg and all(a["mime"] == "image/svg+xml" for a in svg)
     assert len({a["province_name"] for a in photos if a["province_name"]}) >= 20
+
+
+def test_asset_file_thumbnail_and_cache(db_bulk, client, login):
+    """Gambar aset dapat di-cache peramban (ETag/304) dan tersedia versi mini agar ringan di hosting bersama."""
+    import struct
+    h = login("produser")
+    photos = [a for a in client.get("/api/m5/assets", headers=h, params={"media": "foto"}).json()["items"] if a["mime"] == "image/jpeg"]
+    if not photos:
+        pytest.skip("tidak ada foto contoh")
+    url = f"/api/m5/assets/{photos[0]['id']}/file"
+    full = client.get(url, headers=h)
+    assert full.status_code == 200 and "max-age" in full.headers["cache-control"] and full.headers.get("etag")
+    again = client.get(url, headers={**h, "If-None-Match": full.headers["etag"]})
+    assert again.status_code == 304 and again.content == b""
+    th = client.get(url, headers=h, params={"w": 480})
+    assert th.status_code == 200 and th.headers["content-type"] == "image/jpeg" and th.content[:3] == b"\xff\xd8\xff"
+    assert len(th.content) < len(full.content) and th.headers["etag"] != full.headers["etag"]
+    # lebar JPEG dari penanda SOF
+    b, i, width = th.content, 2, None
+    while i < len(b) - 9:
+        if b[i] != 0xFF: i += 1; continue
+        m = b[i + 1]
+        if m in (0xC0, 0xC1, 0xC2):
+            width = struct.unpack(">H", b[i + 7:i + 9])[0]; break
+        i += 2 + struct.unpack(">H", b[i + 2:i + 4])[0]
+    assert width == 480
+    svg = client.get("/api/m5/assets", headers=h, params={"media": "grafis"}).json()["items"][0]
+    s = client.get(f"/api/m5/assets/{svg['id']}/file", headers=h, params={"w": 480})
+    assert s.status_code == 200 and s.headers["content-type"] == "image/svg+xml"
+    assert client.get(url, params={"w": 480}).status_code == 401

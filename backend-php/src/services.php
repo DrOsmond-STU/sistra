@@ -424,6 +424,34 @@ function blob_get(string $sha): string
     if ($data === false || hash('sha256', $data) !== $sha) throw new HttpError(500, 'Integritas berkas ' . substr($sha, 0, 12) . '… gagal diverifikasi');
     return $data;
 }
+/**
+ * Gambar mini JPEG (lebar maks. $w px) untuk kartu bank aset, disimpan di folder thumbs agar dibuat sekali saja.
+ * SVG, berkas non-gambar, atau server tanpa GD: berkas asli dikirim apa adanya.
+ * @return array{0:string,1:string} [isi, mime]
+ */
+function asset_thumb(array $a, int $w): array
+{
+    $mime = (string)$a['mime'];
+    if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true) || !function_exists('imagecreatefromstring')) return [blob_get($a['sha256']), $mime];
+    $path = data_dir() . '/thumbs/' . $a['sha256'] . "-$w.jpg";
+    if (is_file($path) && ($t = @file_get_contents($path)) !== false && $t !== '') return [$t, 'image/jpeg'];
+    $data = blob_get($a['sha256']);
+    $img = @imagecreatefromstring($data);
+    if (!$img) return [$data, $mime];
+    $sw = imagesx($img); $sh = imagesy($img);
+    if ($sw <= $w) { imagedestroy($img); return [$data, $mime]; }
+    $th = (int)max(1, round($sh * $w / $sw));
+    $dst = imagecreatetruecolor($w, $th);
+    imagefill($dst, 0, 0, imagecolorallocate($dst, 255, 255, 255)); // latar putih untuk PNG transparan
+    imagecopyresampled($dst, $img, 0, 0, 0, 0, $w, $th, $sw, $sh);
+    ob_start(); imagejpeg($dst, null, 78); $out = (string)ob_get_clean();
+    imagedestroy($img); imagedestroy($dst);
+    if ($out === '') return [$data, $mime];
+    if (!is_dir(dirname($path))) @mkdir(dirname($path), 0700, true);
+    $tmp = $path . '.tmp' . bin2hex(random_bytes(4));
+    if (@file_put_contents($tmp, $out) !== false) @rename($tmp, $path);
+    return [$out, 'image/jpeg'];
+}
 const TEXT_MIMES = ['text/plain', 'text/markdown', 'text/csv', 'application/json', 'text/html'];
 const TEXT_EXT = ['txt', 'md', 'csv', 'json', 'html', 'htm'];
 function is_text_file(string $fn, string $mime): bool
