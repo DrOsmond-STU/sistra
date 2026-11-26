@@ -14,7 +14,7 @@ foreach (array_slice($argv, 2) as $a) {
 if ($cmd === 'verify') { echo json_encode(audit_verify()), "\n"; exit(0); }
 if ($cmd !== 'reset') { fwrite(STDERR, "Penggunaan: sistra-cli.php reset [--demo] [--password=SANDI]\n"); exit(2); }
 $dir = data_dir();
-foreach (['sistra.db', 'sistra.db-wal', 'sistra.db-shm', '.seeded', '.m47-v1', '.kak-v1', '.bulk-v1', '.bulk-progress', '.geo-v1', '.media-v1', '.photos-v1', 'kredensial.txt'] as $f) @unlink("$dir/$f");
+foreach (['sistra.db', 'sistra.db-wal', 'sistra.db-shm', '.seeded', '.m47-v1', '.kak-v1', '.bulk-v1', '.bulk-progress', '.geo-v1', '.media-v1', '.photos-v1', '.fix-v1', 'kredensial.txt'] as $f) @unlink("$dir/$f");
 if (is_dir("$dir/blobs")) exec('rm -rf ' . escapeshellarg("$dir/blobs"));
 $pw = $opts['password'] ?? null;
 if ($pw === null) { fwrite(STDERR, "--password wajib untuk reset uji\n"); exit(2); }
@@ -34,5 +34,6 @@ if (isset($opts['demo'])) { tx(fn() => geo_fix_demo()); touch("$dir/.geo-v1"); }
 if (isset($opts['demo']) && isset($opts['bulk'])) { seed_media(1e9); tx(fn() => seed_photos(1e9)); }
 if (isset($opts['demo'])) touch("$dir/.photos-v1");
 if (isset($opts['demo'])) touch("$dir/.media-v1");
+if (isset($opts['demo'])) { tx(fn() => fix_demo_data()); touch("$dir/.fix-v1"); }
 touch("$dir/.seeded");
 echo "ok\n";

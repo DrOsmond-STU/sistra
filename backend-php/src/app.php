@@ -28,6 +28,7 @@ require __DIR__ . '/geo.php';
 require __DIR__ . '/pw_reset.php';
 require __DIR__ . '/seed_media.php';
 require __DIR__ . '/seed_photos.php';
+require __DIR__ . '/seed_fix.php';
 
 /** Migrasi M4–M7 sekali per basis data (penanda di data_dir). Data contoh hanya ditanam pada basis data demo. */
 function ensure_m47(): void
@@ -69,6 +70,21 @@ function ensure_geo(): void
     try {
         if (is_file($mark)) return;
         tx(fn() => geo_fix_demo());
+        touch($mark);
+    } finally { flock($lock, LOCK_UN); fclose($lock); }
+}
+
+/** Perbaikan kelengkapan & konsistensi data contoh, sekali jalan setelah semua data contoh siap (penanda .fix-v1). */
+function ensure_fix(): void
+{
+    $mark = data_dir() . '/.fix-v1';
+    if (is_file($mark)) return;
+    foreach (['.bulk-v1', '.geo-v1', '.media-v1', '.photos-v1'] as $m) if (!is_file(data_dir() . "/$m")) return;
+    $lock = fopen(data_dir() . '/.seed.lock', 'c');
+    flock($lock, LOCK_EX);
+    try {
+        if (is_file($mark)) return;
+        if ((int)val('SELECT COUNT(*) FROM social_accounts') > 0) tx(fn() => fix_demo_data()); // bukan basis data demo: tidak ada yang diubah
         touch($mark);
     } finally { flock($lock, LOCK_UN); fclose($lock); }
 }
@@ -143,7 +159,7 @@ function sistra_handle(): void
         ensure_kak();
         // Penanaman data demo massal hanya pada permintaan baca di luar proses masuk, dengan anggaran waktu kecil,
         // agar tidak pernah menahan login.
-        if ($method === 'GET' && !str_starts_with($path, '/api/auth/')) { ensure_bulk(); ensure_media(); ensure_photos(); }
+        if ($method === 'GET' && !str_starts_with($path, '/api/auth/')) { ensure_bulk(); ensure_media(); ensure_photos(); ensure_fix(); }
         ensure_geo();
         $len = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
         if ($len > ini_bytes((string)ini_get('post_max_size'))) fail(413, 'Permintaan melebihi batas ukuran unggah server');

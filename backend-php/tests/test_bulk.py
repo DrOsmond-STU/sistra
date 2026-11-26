@@ -165,3 +165,35 @@ def test_asset_file_thumbnail_and_cache(db_bulk, client, login):
     s = client.get(f"/api/m5/assets/{svg['id']}/file", headers=h, params={"w": 480})
     assert s.status_code == 200 and s.headers["content-type"] == "image/svg+xml"
     assert client.get(url, params={"w": 480}).status_code == 401
+
+
+def test_demo_data_complete_and_consistent(db_bulk):
+    """Data contoh lengkap & saling sesuai: judul varian satu isu dengan brief, status brief mengikuti isinya, aset/lampiran/log terisi."""
+    import json, os, sqlite3, subprocess, pathlib
+    src = pathlib.Path(__file__).resolve().parents[1] / "src" / "seed_m47.php"
+    titles = json.loads(subprocess.run(["php", "-r", f'require "{src}"; echo json_encode(M47_TITLES);'], capture_output=True, text=True, check=True).stdout)
+    db = sqlite3.connect(f"file:{os.environ['SISTRA_DATA_DIR']}/sistra.db?mode=ro", uri=True)
+    one = lambda s: db.execute(s).fetchone()[0]
+    prefixes = ("Pembaruan: ", "Klarifikasi: ", "Panduan Warga: ", "Tanya-Jawab: ", "Fakta Singkat: ", "Info Layanan: ", "Imbauan: ")
+
+    def base(t):
+        for p in prefixes:
+            if t.startswith(p): t = t[len(p):]
+        return t.split(" — ")[0]
+    rows = db.execute("SELECT v.brief_id, v.title, i.code FROM brief_variants v JOIN briefs b ON b.id = v.brief_id JOIN issues i ON i.id = b.issue_id").fetchall()
+    assert rows and all(base(t) in titles[code] for _, t, code in rows if code in titles)
+    sib = {}
+    for bid, t, _ in rows: sib.setdefault(bid, []).append(t)
+    assert all(len(v) == len(set(v)) for v in sib.values())  # varian satu brief berjudul berbeda
+    assert one("SELECT COUNT(*) FROM briefs b WHERE status = 'dipakai' AND NOT EXISTS (SELECT 1 FROM drafts d WHERE d.brief_id = b.id) AND NOT EXISTS (SELECT 1 FROM brief_variants v WHERE v.brief_id = b.id AND v.draft_id IS NOT NULL)") == 0
+    assert one("SELECT COUNT(*) FROM briefs b WHERE status = 'baru' AND EXISTS (SELECT 1 FROM brief_variants v WHERE v.brief_id = b.id)") == 0
+    assert one("SELECT MAX(c) FROM (SELECT COUNT(*) c FROM drafts WHERE brief_id IS NOT NULL GROUP BY brief_id)") <= 12  # tersebar, bukan menumpuk di satu brief
+    assert one("SELECT COUNT(*) FROM channels WHERE url IS NULL OR url = ''") == 0
+    assert one("SELECT COUNT(*) FROM issues WHERE description IS NULL OR description = ''") == 0
+    assert one("SELECT COUNT(*) FROM partner_collabs WHERE notes IS NULL OR notes = ''") == 0
+    assert one("SELECT COUNT(*) FROM drafts WHERE format IN ('caption','thread','carousel','video','podcast','infografis') AND (hashtags IS NULL OR hashtags IN ('', '[]'))") == 0
+    assert one("SELECT COUNT(*) FROM drafts d WHERE d.status IN ('disetujui','tayang') AND NOT EXISTS (SELECT 1 FROM draft_assets a WHERE a.draft_id = d.id)") == 0
+    assert one("SELECT COUNT(*) FROM press_packs WHERE asset_ids IS NULL OR asset_ids IN ('', '[]')") == 0
+    assert one("SELECT COUNT(*) FROM api_clients c WHERE last_used_at IS NOT NULL AND NOT EXISTS (SELECT 1 FROM api_calls a WHERE a.client_id = c.id)") == 0
+    assert one("SELECT COUNT(*) FROM assets WHERE mime = 'image/jpeg' AND coverage_id IS NOT NULL") >= 20
+    db.close()

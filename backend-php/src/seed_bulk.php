@@ -59,10 +59,11 @@ function bulk_issue(int $i): array { return bulk_pick(bulk_ctx()['issues'], $i);
 function bulk_titles(string $code): array { return M47_TITLES[$code] ?? ['Informasi resmi terbaru']; }
 function bulk_facts(string $code): array { return M47_FACTS[$code] ?? ['Informasi resmi tersedia di kanal pemerintah (data contoh)']; }
 const BULK_PREFIX = ['', 'Pembaruan: ', 'Klarifikasi: ', 'Panduan Warga: ', 'Tanya-Jawab: ', 'Fakta Singkat: ', 'Info Layanan: ', 'Imbauan: '];
-function bulk_title(int $i, ?string $prov = null): string
+function bulk_title(int $i, ?string $prov = null): string { return bulk_title_issue(bulk_issue($i), $i, $prov); }
+/** Judul bertopik isu tertentu (varian brief harus tetap satu isu dengan brief-nya). */
+function bulk_title_issue(array $is, int $j, ?string $prov = null): string
 {
-    $is = bulk_issue($i);
-    $t = BULK_PREFIX[intdiv($i, 7) % count(BULK_PREFIX)] . bulk_pick(bulk_titles($is['code']), intdiv($i, 3));
+    $t = BULK_PREFIX[intdiv($j, 7) % count(BULK_PREFIX)] . bulk_pick(bulk_titles($is['code']), intdiv($j, 3));
     return $prov ? "$t — " . PROVINCES[$prov][0] : $t;
 }
 
@@ -116,7 +117,7 @@ function bulk_step(string $s): void
                     'tone' => bulk_pick(TONES, $i), 'key_messages' => 'Informasi resmi hanya dari kanal pemerintah. ' . bulk_facts($is['code'])[0] . '.', 'facts' => jenc($facts),
                     'status' => bulk_pick(['baru', 'dihasilkan', 'dihasilkan', 'dipakai'], $i), 'ai_mode' => 'simulasi', 'gen_ms' => mt_rand(1800, 13500),
                     'created_by' => bulk_pick([$U['produser'], $U['redaktur'], $U['analis2']], $i), 'created_at' => bulk_at($h), 'updated_at' => bulk_at(max(1, $h - 2))]);
-                foreach ([0, 1] as $k) insert('brief_variants', ['brief_id' => $bid, 'angle' => ANGLES[($i + $k) % 5], 'title' => bulk_title($i + $k, $pv),
+                foreach ([0, 1] as $k) insert('brief_variants', ['brief_id' => $bid, 'angle' => ANGLES[($i + $k) % 5], 'title' => bulk_title_issue($is, $i + $k * 3, $pv),
                     'body' => m47_body($is['code'], bulk_title($i, $pv), 'artikel', $pv ? PROVINCES[$pv][0] : null), 'hashtags' => jenc(['#InfoResmi']), 'ai_mode' => 'simulasi', 'created_at' => bulk_at(max(1, $h - 1))]);
             }
             break;
